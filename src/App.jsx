@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 
 import { initialAuth, getActiveUser } from "./store/reducers/auth/authSlice";
@@ -35,12 +35,19 @@ import AdminDisplaySubscription from "./pages/admin/AdminDisplaySubscription";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 
 export default function App() {
+  const user = useSelector((state)=>state?.auth?.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(initialAuth());
-    dispatch(getActiveUser());
+    
   }, [dispatch]);
+
+  useEffect(()=>{
+    if(user){
+      dispatch(getActiveUser());
+    }
+  }, [])
 
   return (
     <>

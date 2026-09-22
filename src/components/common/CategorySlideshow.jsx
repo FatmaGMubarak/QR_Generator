@@ -128,9 +128,7 @@ export default function CategorySlideshow() {
       aria-roledescription="carousel"
       aria-label="عرض شرائح الفئات"
     >
-      {/* =========================================
-          SLIDES
-      ========================================== */}
+
 
       <div
         className="
@@ -182,10 +180,6 @@ export default function CategorySlideshow() {
               `}
             />
 
-            {/* -----------------------------------------
-                Overlay
-            ------------------------------------------ */}
-
             <div
               className="
                 absolute
@@ -210,10 +204,6 @@ export default function CategorySlideshow() {
                 to-transparent
               "
             />
-
-            {/* -----------------------------------------
-                Content
-            ------------------------------------------ */}
 
             <div
               className="
@@ -302,10 +292,6 @@ export default function CategorySlideshow() {
       </div>
 
 
-      {/* =========================================
-          PREVIOUS
-      ========================================== */}
-
       <button
         onClick={prev}
         aria-label="السابق"
@@ -343,11 +329,6 @@ export default function CategorySlideshow() {
           strokeWidth={2}
         />
       </button>
-
-
-      {/* =========================================
-          NEXT
-      ========================================== */}
 
       <button
         onClick={next}
@@ -387,11 +368,6 @@ export default function CategorySlideshow() {
         />
       </button>
 
-
-      {/* =========================================
-          SLIDE INDICATORS
-      ========================================== */}
-
       <div
         className="
           absolute
@@ -430,10 +406,6 @@ export default function CategorySlideshow() {
         ))}
       </div>
 
-
-      {/* =========================================
-          SLIDE COUNTER
-      ========================================== */}
 
       <div
         className="

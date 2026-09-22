@@ -3,10 +3,10 @@ import Search from '../components/common/Search'
 import CategoriesListing from '../components/common/CategoriesListing'
 import CategoryCard from '../components/common/CategoryCard'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchProfiles } from '../store/reducers/profileSlice'
+import { fetchHomeProfiles, fetchProfiles } from '../store/reducers/profileSlice'
 import CategorySlideshow from '../components/common/CategorySlideshow'
 import { useLocation } from 'react-router-dom'
-import { fetchCategories } from '../store/reducers/categorySlice'
+import { fetchCategories, fetchHomeCategories } from '../store/reducers/categorySlice'
 import ProfileCard from '../components/common/ProfileCard'
 import AdminTopbar from '../components/admin/ui/AdminTopbar'
 import Topbar from '../components/common/ui/Topbar'
@@ -15,9 +15,9 @@ import { Link } from 'react-router-dom'
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 
 export default function LandingPage() {
-  const profiles = useSelector((state)=> state?.profile?.profiles);
+  const homeProfiles = useSelector((state)=> state?.profile?.homeProfiles);
+  const homeCategories = useSelector((state)=> state?.category?.homeCategories);
   const loading = useSelector((state)=>state?.profile?.loading);
-  const categories = useSelector((state)=> state?.category?.categories);
 
   const dispatch = useDispatch();
 
@@ -25,8 +25,8 @@ export default function LandingPage() {
   const isAdmin = location.pathname.includes("/admin");
 
   useEffect(()=>{
-    dispatch(fetchProfiles());
-    dispatch(fetchCategories());
+    dispatch(fetchHomeProfiles());
+    dispatch(fetchHomeCategories());
   }, [dispatch])
 
   if(loading){
@@ -51,13 +51,13 @@ export default function LandingPage() {
       <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[1%] lg:pr-5'>
        <div className='w-full flex justify-between items-center'>
           <h1 className='text-lg sm:text-xl font-bold'>كل المنشأت</h1>
-          {categories?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
+          {homeCategories?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
             <Link to={"/display-all-categories"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
         <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-          {categories?.slice(0, 4)?.map((cat)=>{
+          {homeCategories?.slice(0, 4)?.map((cat)=>{
                           return (
                             <CategoryCard key={cat?.id} logoImg={cat?.img} name={cat?.name} id={cat?.id} isAdmin={isAdmin}/>
                           )
@@ -67,13 +67,13 @@ export default function LandingPage() {
       <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%] lg:pr-5'>
         <div className='w-full flex justify-between items-center'>
           <h1 className='text-lg sm:text-xl font-bold'>الصفحات الشخصية</h1>
-          {profiles?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
+          {homeProfiles?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
             <Link to={"/display-all-profiles"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
         <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-          {profiles?.slice(0, 4)?.map((profile)=>{
+          {homeProfiles?.slice(0, 4)?.map((profile)=>{
           return (
             <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin}/>
           )

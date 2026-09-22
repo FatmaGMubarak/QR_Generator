@@ -3,6 +3,7 @@ import api from "../../api/baseUrl";
 
 const initialState = {
   profiles: [],
+  homeProfiles: [],
   profile: null,
   loading: false,
   error:null,
@@ -19,6 +20,24 @@ export const fetchProfiles = createAsyncThunk(
                 },
               };
             const response = await api.get(`/api/profiles`, config)
+            return response.data
+        }catch (error){
+            return rejectWithValue(error.response?.data || error.message)
+        }
+    }
+);
+
+export const fetchHomeProfiles = createAsyncThunk(
+    "profile/fetchHomeProfiles",
+    async (_, {getState, rejectWithValue}) => {
+        try{
+            const token = getState().auth.token;
+            const config = {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              };
+            const response = await api.get(`/api/home/profiles`, config)
             return response.data
         }catch (error){
             return rejectWithValue(error.response?.data || error.message)
@@ -115,6 +134,18 @@ extraReducers: (builder) =>{
         state.profiles = action?.payload?.data;
     })
     .addCase(fetchProfiles.rejected, (state, action)=>{
+        state.loading = false;
+        state.error = action.payload
+    })
+    .addCase(fetchHomeProfiles.pending, (state)=> {
+        state.loading = true;
+        state.error = null;
+    })
+    .addCase(fetchHomeProfiles.fulfilled, (state, action)=>{
+        state.loading = false;
+        state.homeProfiles = action?.payload;
+    })
+    .addCase(fetchHomeProfiles.rejected, (state, action)=>{
         state.loading = false;
         state.error = action.payload
     })

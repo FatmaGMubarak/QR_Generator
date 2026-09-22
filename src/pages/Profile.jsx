@@ -25,7 +25,7 @@ export default function Profile() {
  const [profileNoToken, setProfileNoToken] = useState(null);
 const [fbLoading, setFbLoading] = useState(false);
 const token = useSelector((state) => state?.auth?.token);
-const authInitialized = useSelector((state) => state?.auth?.initialized); // see note below
+const authInitialized = useSelector((state) => state?.auth?.initialized); 
 const profile = useSelector((state) => state?.profile?.profile);
 const backendLoading = useSelector((state) => state?.profile?.loading);
 const { slug } = useParams();
@@ -68,39 +68,50 @@ const dispatch = useDispatch();
 useEffect(() => {
   if (!slug) return;
 
-  const getFromFirebase = async () => {
-    setFbLoading(true);
-    try {
-      const q = query(
-        collection(db, "profiles"),
-        where("userName", "==", slug)
-      );
-      const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        setProfileNoToken(querySnapshot.docs[0].data());
-      } else {
-        console.log("No such profile in Firebase either");
-      }
-    } catch (error) {
-      console.error("Error fetching profile from Firebase:", error);
-    } finally {
-      setFbLoading(false);
-    }
-  };
-
-  if (token) {
     dispatch(fetchProfileById(slug))
       .unwrap()
       .catch((err) => {
-        // backend has no record for this slug (404) — fall back to Firebase
         console.warn("Backend fetch failed, falling back to Firebase:", err);
-        getFromFirebase();
       });
-  } else {
-    getFromFirebase();
-  }
-}, [dispatch, slug, token]);
+  
+}, [dispatch, slug]);
+// useEffect(() => {
+//   if (!slug) return;
+
+//   const getFromFirebase = async () => {
+//     setFbLoading(true);
+//     try {
+//       const q = query(
+//         collection(db, "profiles"),
+//         where("userName", "==", slug)
+//       );
+//       const querySnapshot = await getDocs(q);
+
+//       if (!querySnapshot.empty) {
+//         setProfileNoToken(querySnapshot.docs[0].data());
+//       } else {
+//         console.log("No such profile in Firebase either");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching profile from Firebase:", error);
+//     } finally {
+//       setFbLoading(false);
+//     }
+//   };
+
+//   if (token) {
+//     dispatch(fetchProfileById(slug))
+//       .unwrap()
+//       .catch((err) => {
+//         // backend has no record for this slug (404) — fall back to Firebase
+//         console.warn("Backend fetch failed, falling back to Firebase:", err);
+//         getFromFirebase();
+//       });
+//   } else {
+//     getFromFirebase();
+//   }
+// }, [dispatch, slug, token]);
 
 const loading = token ? backendLoading : fbLoading;
 

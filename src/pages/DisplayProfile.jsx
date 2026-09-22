@@ -107,7 +107,7 @@ navigate(`/user`);
     {general && <AdminTopbar />}
     <div
       dir="rtl"
-      className="min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-6 sm:px-6 lg:px-8"
+      className="min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-6 sm:px-6 lg:px-8  mt-[20] md:mt-[7%]"
     >
       <div className="max-w-6xl mx-auto">
 
