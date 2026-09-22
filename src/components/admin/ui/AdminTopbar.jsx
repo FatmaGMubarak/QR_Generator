@@ -296,7 +296,7 @@ export default function AdminTopbar() {
         <div className="border-t border-gray-100 bg-gray-50/50 px-5 py-3 text-center">
           <button
           onClick={()=>{
-            navigate('/user/notifications-page');
+            navigate('/admin/notifications-page');
             setIsNotificationOpen(false);
           }}
             className="

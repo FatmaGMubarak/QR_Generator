@@ -78,7 +78,6 @@ export default function CategoriesListing() {
         py-3 sm:py-5
       "
     >
-      {/* Fallback for browsers/setups without the tailwind-scrollbar-hide plugin */}
       <style>{`
         .categories-scroll::-webkit-scrollbar { display: none; }
         .categories-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -114,7 +113,6 @@ export default function CategoriesListing() {
           scrollbar-hide
         "
       >
-        {/* Background glow */}
         <div
           className="
             pointer-events-none
@@ -225,7 +223,6 @@ export default function CategoriesListing() {
                     }
                   `}
                 >
-                  {/* Hover shine */}
                   <span
                     className={`
                       pointer-events-none
@@ -250,7 +247,6 @@ export default function CategoriesListing() {
                     `}
                   />
 
-                  {/* Icon */}
                   <span
                     className={`
                       relative
@@ -300,12 +296,10 @@ export default function CategoriesListing() {
                     />
                   </span>
 
-                  {/* Name */}
                   <span className="relative z-10">
                     {cat.name}
                   </span>
 
-                  {/* Active indicator */}
                   {isActive && (
                     <span
                       className="

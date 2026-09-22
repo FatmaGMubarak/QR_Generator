@@ -5,9 +5,8 @@ import { loadData } from "../../../utilis/loadData";
 
 const initialState = {
   initialized: false,
-  superAdmin: null,
-  admin: null,
   user: null,
+  role: null,
   token: null,
   loading: false,
   error: null,
@@ -23,7 +22,7 @@ export const login = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  },
+  }
 );
 
 export const register = createAsyncThunk(
@@ -35,7 +34,19 @@ export const register = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  },
+  }
+);
+
+export const getActiveUser = createAsyncThunk(
+  "/user",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/api/user");
+      return response?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
 );
 
 export const logOut = createAsyncThunk(
@@ -47,30 +58,55 @@ export const logOut = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  },
+  }
 );
 
 export const changePassword = createAsyncThunk(
   "/changePassword",
   async (newPasswordData, { rejectWithValue }) => {
     try {
-      const response = await api.post("/api/changePassword", newPasswordData);
+      const response = await api.post(
+        "/api/changePassword",
+        newPasswordData
+      );
+
       return response?.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  },
+  }
 );
+
+const getUserRole = (user) => {
+  if (!user) return null;
+
+  if (user.is_super_admin === 1) {
+    return "superAdmin";
+  }
+
+  if (user.is_admin === 1) {
+    return "admin";
+  }
+
+  return "user";
+};
 
 const authSlice = createSlice({
   name: "auth",
+
   initialState,
+
   reducers: {
     initialAuth: (state) => {
       const { token } = loadData();
-      if (token) state.token = token;
 
       const storedUser = sessionStorage.getItem("user");
+      const storedRole = sessionStorage.getItem("role");
+
+      if (token) {
+        state.token = token;
+      }
+
       if (storedUser) {
         try {
           state.user = JSON.parse(storedUser);
@@ -78,69 +114,142 @@ const authSlice = createSlice({
           state.user = null;
         }
       }
+
+      if (storedRole) {
+        state.role = storedRole;
+      }
+
       state.initialized = true;
     },
   },
+
   extraReducers: (builder) => {
     builder
+
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.user = action?.payload?.user;
-        state.token = action?.payload?.token;
-        sessionStorage.setItem("token", action.payload?.token);
-        sessionStorage.setItem("user", JSON.stringify(action?.payload?.user));
-        if (action.payload?.token) {
-          Cookies.set("token", action.payload.token, { expires: 7 });
+
+        const user = action?.payload?.user;
+        const token = action?.payload?.token;
+
+        const role = getUserRole(user);
+
+        state.user = user;
+        state.role = role;
+        state.token = token;
+
+        sessionStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("role", role);
+
+        if (token) {
+          sessionStorage.setItem("token", token);
+
+          Cookies.set("token", token, {
+            expires: 7,
+          });
         }
       })
+
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action?.payload?.message;
+        state.error = action?.payload?.message || "Login failed";
       })
+
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action?.payload?.user;
-        state.token = action?.payload?.token;
+        state.error = null;
+
+        const user = action?.payload?.user;
+        const token = action?.payload?.token;
+
+        const role = getUserRole(user);
+
+        state.user = user;
+        state.role = role;
+        state.token = token;
+
+        sessionStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("role", role);
+
+        if (token) {
+          sessionStorage.setItem("token", token);
+
+          Cookies.set("token", token, {
+            expires: 7,
+          });
+        }
       })
+
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action?.payload?.message || "Registration failed";
       })
+
+      .addCase(getActiveUser.pending, (state) =>{
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getActiveUser.fulfilled, (state, action)=> {
+        state.user = action?.payload?.data;
+        state.loading = false;
+        
+      })
+      .addCase(getActiveUser.rejected, (state, action)=>{
+        state.loading = false;
+        state.error = action?.payload?.message;
+      })
+
       .addCase(logOut.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(logOut.fulfilled, (state, action) => {
+
+      .addCase(logOut.fulfilled, (state) => {
         state.loading = false;
-        state.token = null;
+
         state.user = null;
+        state.role = null;
+        state.token = null;
+        state.error = null;
+
         Cookies.remove("token");
+
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("user");
+        sessionStorage.removeItem("role");
       })
+
       .addCase(logOut.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action?.payload?.message || "Logout failed";
       })
+
       .addCase(changePassword.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(changePassword.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
+        state.message = action?.payload?.message || "";
       })
+
       .addCase(changePassword.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error =
+          action?.payload?.message || "Password change failed";
       });
   },
 });

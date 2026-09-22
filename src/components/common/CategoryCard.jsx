@@ -83,7 +83,6 @@ export default function CategoryCard({ logoImg, name, id }) {
         "
       />
 
-      {/* Small decorative circle */}
       <div
         className="
           pointer-events-none
@@ -128,7 +127,6 @@ export default function CategoryCard({ logoImg, name, id }) {
               group-hover:shadow-[0_12px_25px_-10px_rgba(57,122,85,0.35)]
             "
           >
-            {/* Logo glow */}
             <div
               className="
                 absolute
