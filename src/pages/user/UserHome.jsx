@@ -1,166 +1,195 @@
-import React, { useEffect } from 'react'
-import Search from '../../components/common/Search'
-import CategoriesListing from '../../components/common/CategoriesListing'
-import CategoryCard from '../../components/common/CategoryCard'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchProfiles } from '../../store/reducers/profileSlice'
-import CategorySlideshow from '../../components/common/CategorySlideshow'
-import { useLocation } from 'react-router-dom'
-import { fetchCategories } from '../../store/reducers/categorySlice'
-import ProfileCard from '../../components/common/ProfileCard'
-import { useUserOptions } from '../../context/UserOptionsContext'
-import AnalyzingImageDemo from '../../components/common/AnalyzingImageDemo'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from "react";
+import Search from "../../components/common/Search";
+import CategoriesListing from "../../components/common/CategoriesListing";
+import CategoryCard from "../../components/common/CategoryCard";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProfiles } from "../../store/reducers/profileSlice";
+import CategorySlideshow from "../../components/common/CategorySlideshow";
+import { useLocation } from "react-router-dom";
+import { fetchCategories } from "../../store/reducers/categorySlice";
+import ProfileCard from "../../components/common/ProfileCard";
+import { useUserOptions } from "../../context/UserOptionsContext";
+import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
+import { Link } from "react-router-dom";
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 
 export default function AdminHome() {
-  const { profile, qrProfile, setProfile, setQrProfile,
-       setLogoURL,
-      setCoverURL,
-      setName,
-      setBio,
-      setEmail,
-      setAddress,
-      setMenu,
-      setPhoneNumber,
-      setFacebookURL,
-      setInstagramURL,
-      setTiktokURL,
-      setWhatsappURL,
-      setWhatsappNumber,
-      errors,
-      hasErrors,
-      setHasErrors,
-      setErrors,
-      qrValue, setQrValue,
-      resetForm,
-      menuPreviewUrl
-     } = useUserOptions();
-  const profiles = useSelector((state)=> state?.profile?.profiles);
-  const categories = useSelector((state)=> state?.category?.categories);
-  const loading = useSelector((state)=>state?.profile?.loading);
+  const {
+    profile,
+    qrProfile,
+    setProfile,
+    setQrProfile,
+    setLogoURL,
+    setCoverURL,
+    setName,
+    setBio,
+    setEmail,
+    setAddress,
+    setMenu,
+    setPhoneNumber,
+    setFacebookURL,
+    setInstagramURL,
+    setTiktokURL,
+    setWhatsappURL,
+    setWhatsappNumber,
+    errors,
+    hasErrors,
+    setHasErrors,
+    setErrors,
+    qrValue,
+    setQrValue,
+    resetForm,
+    menuPreviewUrl,
+  } = useUserOptions();
+  const profiles = useSelector((state) => state?.profile?.profiles);
+  const categories = useSelector((state) => state?.category?.categories);
+  const loading = useSelector((state) => state?.profile?.loading);
 
   const dispatch = useDispatch();
 
   const location = useLocation();
   const isAdmin = location.pathname.includes("/admin");
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch(fetchProfiles());
     dispatch(fetchCategories());
-    
-  }, [ dispatch]);
+  }, [dispatch]);
 
-    useEffect(()=>{
-      sessionStorage.removeItem("profileCreated");
-      sessionStorage.removeItem("QR Profile");
-      setProfile({
-        name: "",
-        userName: "",
-        bio: "",
-        email: "",
-        address: "",
-        menu: null,
-        phoneNumber: "",
-        facebookURL: "",
-        instagramURL: "",
-        tiktokURL: "",
-        whatsappNumber: "",
-        whatsappURL: "",
-        logoURL: "",
-        coverURL: "",
-        logoURLPublicId: "",
-        logoURLDeleteToken: "",
-        coverURLPublicId: "",
-        coverURLDeleteToken: "",
-      });
-      setQrProfile({
-        name: "",
-        userName: "",
-        bio: "",
-        email: "",
-        address: "",
-        menu: null,
-        phoneNumber: "",
-        facebookURL: "",
-        instagramURL: "",
-        tiktokURL: "",
-        whatsappNumber: "",
-        whatsappURL: "",
-        logoURL: "",
-        coverURL: "",
-      });
-      setName("");
-      setBio("");
-      setEmail("");
-      setAddress("");
-      setMenu(null);
-      setPhoneNumber("");
-      setFacebookURL("");
-      setInstagramURL("");
-      setTiktokURL("");
-      setWhatsappNumber("");
-      setWhatsappURL("");
-      setQrValue("");
-    }, []);
+  useEffect(() => {
+    sessionStorage.removeItem("profileCreated");
+    sessionStorage.removeItem("QR Profile");
+    setProfile({
+      name: "",
+      userName: "",
+      bio: "",
+      email: "",
+      address: "",
+      menu: null,
+      phoneNumber: "",
+      facebookURL: "",
+      instagramURL: "",
+      tiktokURL: "",
+      whatsappNumber: "",
+      whatsappURL: "",
+      logoURL: "",
+      coverURL: "",
+      logoURLPublicId: "",
+      logoURLDeleteToken: "",
+      coverURLPublicId: "",
+      coverURLDeleteToken: "",
+    });
+    setQrProfile({
+      name: "",
+      userName: "",
+      bio: "",
+      email: "",
+      address: "",
+      menu: null,
+      phoneNumber: "",
+      facebookURL: "",
+      instagramURL: "",
+      tiktokURL: "",
+      whatsappNumber: "",
+      whatsappURL: "",
+      logoURL: "",
+      coverURL: "",
+    });
+    setName("");
+    setBio("");
+    setEmail("");
+    setAddress("");
+    setMenu(null);
+    setPhoneNumber("");
+    setFacebookURL("");
+    setInstagramURL("");
+    setTiktokURL("");
+    setWhatsappNumber("");
+    setWhatsappURL("");
+    setQrValue("");
+  }, []);
 
-    if(loading){
-          return(
-            <div className='w-full h-screen flex justify-center items-center'>
-              <AnalyzingImageDemo />
-            </div>
-          )
-        }
-    
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <AnalyzingImageDemo />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] p-4 sm:p-5">
-      <div className='w-full h-full mt-[7%]'>
+      <div className="w-full h-full mt-[7%]">
         <CategorySlideshow />
       </div>
-      <div className='w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[3%]'>
+      <div className="w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[3%]">
         <Search />
         <CategoriesListing />
       </div>
 
-      <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[1%]'>
-               <div className='w-full flex justify-between items-center'>
-          <h1 className='text-lg sm:text-xl font-bold'>كل المنشأت</h1>
-          {categories?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
-            <Link to={"/user/display-all-categories"}>عرض المزيد </Link>
-            <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
-          </div>}
-        </div>
-              {categories?.length > 0 ? (<div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-                {categories?.slice(0, 4)?.map((cat)=>{
-                return (
-                  <CategoryCard key={cat?.id} logoImg={cat?.img} name={cat?.name} id={cat?.id} isAdmin={isAdmin}/>
-                )
-              })}
-              </div>) : (<div className='flex items-center justify-center w-full'>
-            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
-          </div>)}
+      <div className="w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[1%]">
+        <div className="w-full flex justify-between items-center">
+          <h1 className="text-lg sm:text-xl font-bold">كل المنشأت</h1>
+          {categories?.length > 4 && (
+            <div className="flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24">
+              <Link to={"/user/display-all-categories"}>عرض المزيد </Link>
+              <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
             </div>
-            <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]'>
-              <div className='w-full flex justify-between items-center'>
-          <h1 className='text-lg sm:text-xl font-bold'>الصفحات الشخصية</h1>
-         {profiles?.length > 0 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
-            <Link to={"/user/display-all-profiles"}>عرض المزيد </Link>
-            <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
-          </div>}
+          )}
         </div>
-              {profiles?.length > 0 ? (<div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-                {profiles?.slice(0, 4)?.map((profile)=>{
-                return (
-                  <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin}/>
-                )
-              })}
-              </div>): (
-                <div className='flex items-center justify-center w-full'>
-            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+        {categories?.length > 0 ? (
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2">
+            {categories?.slice(0, 4)?.map((cat) => {
+              return (
+                <CategoryCard
+                  key={cat?.id}
+                  logoImg={cat?.img}
+                  name={cat?.name}
+                  id={cat?.id}
+                  isAdmin={isAdmin}
+                />
+              );
+            })}
           </div>
-              )}
+        ) : (
+          <div className="flex items-center justify-center w-full">
+            <p className="text-gray-600 font-semibold text-lg">
+              لا توجد بيانات للعرض
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]">
+        <div className="w-full flex justify-between items-center">
+          <h1 className="text-lg sm:text-xl font-bold">الصفحات الشخصية</h1>
+          {profiles?.length > 0 && (
+            <div className="flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24">
+              <Link to={"/user/display-all-profiles"}>عرض المزيد </Link>
+              <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
             </div>
-
+          )}
+        </div>
+        {profiles?.length > 0 ? (
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2">
+            {profiles?.slice(0, 4)?.map((profile) => {
+              return (
+                <ProfileCard
+                  key={profile?.id}
+                  logoImg={profile?.logo}
+                  name={profile?.name}
+                  slug={profile?.slug}
+                  isAdmin={isAdmin}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full">
+            <p className="text-gray-600 font-semibold text-lg">
+              لا توجد بيانات للعرض
+            </p>
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
