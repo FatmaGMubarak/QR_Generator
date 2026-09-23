@@ -191,7 +191,7 @@ export default function CategoryCard({ logoImg, name, id }) {
               group-hover:text-[#71877c]
             "
           >
-            صفحة المطعم
+            صفحة ال{name}
           </p>
         </div>
 

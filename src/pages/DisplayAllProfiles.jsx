@@ -52,8 +52,8 @@ export default function DisplayAllProfiles() {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8" dir="rtl">
-      <h2 className="mb-6 text-center font-['Cairo'] text-2xl font-extrabold text-[#244238]">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8  mt-[20%] sm:mt-[7%]" dir="rtl">
+      <h2 className="mb-6 text-center font-['Cairo'] text-2xl font-extrabold text-[#244238] ">
         الصفحات
       </h2>
 
@@ -75,13 +75,14 @@ export default function DisplayAllProfiles() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap justify-center gap-5">
+          <div className="flex flex-wrap justify-center gap-5 ">
             {paginatedProfiles.map((profile) => (
               <ProfileCard
                 key={profile.id || profile.slug}
                 logoImg={profile.logo}
                 name={profile.name}
                 slug={profile.slug}
+                activity={profile?.activity_id}
                 isAdmin={isAdmin}
               />
             ))}

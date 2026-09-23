@@ -148,7 +148,6 @@ useEffect(() => {
     },
     validationSchema: isLogin ? loginSchema : signupSchema,
     onSubmit: (values, { setSubmitting }) => {
-      console.log(values)
       isLogin? loginAccount(values) : registerAccount(values)
       setSubmitting(false);
     },
@@ -187,7 +186,6 @@ useEffect(() => {
   }
 
   const registerAccount = async (values) =>{
-    console.log(values)
     try{
       const formData = new FormData();
       formData.append("name", values?.userName);

@@ -16,6 +16,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AnalyzingImageDemo from "../common/AnalyzingImageDemo";
 import Select from 'react-select'
 import {fetchCategories} from '../../store/reducers/categorySlice.js'
+import { fetchUsers } from "../../store/reducers/auth/authSlice.js";
 
 
 export default function EditUserInformation() {
@@ -30,6 +31,7 @@ export default function EditUserInformation() {
     logoURL,
     coverURL,
     name,
+    clientName,
     activity,
     bio,
     email,
@@ -49,6 +51,7 @@ export default function EditUserInformation() {
     setLogoURL,
     setCoverURL,
     setName,
+    setClientName,
     setActivity,
     setBio,
     setEmail,
@@ -80,11 +83,22 @@ export default function EditUserInformation() {
     coverURL: false,
   });
 
+
+   const [selectedUser, setSelectedUser] = useState(null);
+   const users = useSelector((state) => state?.auth?.users);
   const profile = useSelector((state)=> state?.profile?.profile);
+   const role = useSelector((state)=>state?.auth?.role);
+  
 
   const loadingProfile = useSelector((state)=> state?.profile?.loading);
 
    const categories = useSelector((state)=>state?.category?.categories);
+
+    const userOptions =
+    users?.map((user) => ({
+      value: user?.id,
+      label: `${user?.name} - ${user?.phone}`,
+    })) || [];
 
 const options = categories?.map((cat) => ({
     value: cat?.name,
@@ -95,9 +109,15 @@ const options = categories?.map((cat) => ({
 
   const navigate = useNavigate();
 
+  const profileActivity = categories?.find((cat)=>cat?.id === profile?.activity_id);
+
       useEffect(()=>{
     dispatch(fetchCategories());
-  }, [])
+    if(role === 'admin'){
+      dispatch(fetchUsers());
+    }
+  }, [dispatch, role])
+
 
   useEffect(()=>{
     if(profile){
@@ -116,7 +136,9 @@ const options = categories?.map((cat) => ({
 
   useEffect(() => {
     setName(profile?.name || "");
-    setActivity(profile?.activity || "");
+    setClientName(profile?.clientName || "");
+    
+    setActivity({value:profileActivity?.name || "", label: profileActivity?.name || ""});
     setBio(profile?.about_us || "");
       setEmail(profile?.email || "");
       setAddress(profile?.address || "");
@@ -138,7 +160,6 @@ const options = categories?.map((cat) => ({
   }, [editQrProfile]);
 
     const handleCancel = async () => {
-  // Revoke any local object URLs we created for previews to avoid memory leaks
   if (logoURL?.startsWith("blob:")) {
     URL.revokeObjectURL(logoURL);
   }
@@ -155,6 +176,8 @@ const options = categories?.map((cat) => ({
     setEditProfile({
       name: "",
       userName: "",
+      clientName: "",
+      activity: "",
     bio: "",
     email: "",
     address: "",
@@ -171,6 +194,8 @@ const options = categories?.map((cat) => ({
     setEditQrProfile({
       name: "",
       userName: "",
+      clientName: "",
+      activity: "",
     bio: "",
         email: "",
     address: "",
@@ -185,6 +210,7 @@ const options = categories?.map((cat) => ({
     coverURL: "",
     });
     setName("")
+    setClientName("")
     setActivity("")
     setBio("")
     setEmail("")
@@ -207,6 +233,7 @@ const submitProfilePage = async (values) => {
   try {
     const profileData = new FormData();
     profileData.append("name", values.name);
+    profileData.append("activity_id", values.activity?.value);
     profileData.append("about_us", values.bio);
     profileData.append("email", values.email);
     profileData.append("address", values.address);
@@ -403,6 +430,7 @@ const submitProfilePage = async (values) => {
   const formik = useFormik({
     initialValues: {
       name: profile?.name || "",
+      activity: profile?.activity_id || "",
       bio: profile?.about_us || "",
       email: profile?.email || "",
       address: profile?.address || "",
@@ -796,6 +824,53 @@ const submitProfilePage = async (values) => {
         />
       </div>
 
+       {/* User */}
+                   {role === "admin" && (
+                     <div className="w-full mb-6">
+                      <label className="block text-sm font-bold text-[#475569] mb-2 mr-1">
+                        اسم العميل
+                      </label>
+      
+                      <Select
+                        options={userOptions}
+                        value={
+                          userOptions.find(
+                            (option) =>
+                              option.value === selectedUser?.id
+                          ) || null
+                        }
+                        placeholder="برجاء اختيار اسم العميل"
+                        className="font-semibold"
+                        classNamePrefix="custom-select"
+                        isClearable
+                        onChange={(selectedOption) => {
+                    if (!selectedOption) {
+                      setSelectedUser(null);
+                      setClientName("")
+                      return;
+                    }
+
+                    const user = users?.find(
+                      (u) => u?.id === selectedOption.value
+                    );
+
+                    setSelectedUser(user || null);
+                    setClientName(user?.name || "");
+                    setEditProfile((prev) => ({
+                      ...prev,
+                      clientName: user?.name,                      
+                    }));
+                    setEditQrProfile((prev) => ({
+                      ...prev,
+                      clientName: user?.name,                      
+                    }));
+                  }}
+                      />
+                    </div>
+                   )}
+
+
+
       {/* نوع المنشأة */}
               <div className="w-full">
                 <div className="flex items-center gap-x-5 mb-2">
@@ -827,11 +902,11 @@ const submitProfilePage = async (values) => {
 
                     formik.setFieldValue("activity", selectedOption);
                     setActivity(selectedOption);
-                    setProfile((prev) => ({
+                    setEditProfile((prev) => ({
                       ...prev,
                       activity: selectedOption,                      
                     }));
-                    setQrProfile((prev) => ({
+                    setEditQrProfile((prev) => ({
                       ...prev,
                       activity: selectedOption,                      
                     }));

@@ -1,13 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import logo from "../../assets/facebookLogo.png";
 import { useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "../../store/reducers/categorySlice";
 
-export default function ProfileCard({logoImg, name, slug, isAdmin}) {
+export default function ProfileCard({logoImg, name, activity,slug, isAdmin}) {
+  const categories = useSelector((state)=>state?.category?.categories);
+  const dispatch = useDispatch();
   const location = useLocation();
   const isUser = location.pathname.includes("/user");
-  const general = !location.pathname.includes("/admin") && !location.pathname.includes("/user")
+  const general = !location.pathname.includes("/admin") && !location.pathname.includes("/user");
+  const profileActivity = categories?.find((cat)=>cat?.id === activity);
+  useEffect(()=>{
+    dispatch(fetchCategories());
+  }, [dispatch])
   return (
     <div
       dir="rtl"
@@ -156,7 +164,7 @@ export default function ProfileCard({logoImg, name, slug, isAdmin}) {
               group-hover:text-[#71877c]
             "
           >
-            صفحة المطعم
+            صفحة ال{profileActivity?.name}
           </p>
         </div>
 

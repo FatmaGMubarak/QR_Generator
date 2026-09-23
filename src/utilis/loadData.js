@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 export const loadData = () => {
   const token = Cookies.get("token");
 
-  const superAdmin = sessionStorage.getItem("superAdmin");
+  const superAdmin = localStorage.getItem("superAdmin");
 
   try {
     return {

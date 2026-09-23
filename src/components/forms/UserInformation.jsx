@@ -19,6 +19,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AnalyzingImageDemo from "../common/AnalyzingImageDemo";
 import Select from 'react-select'
 import {fetchCategories} from '../../store/reducers/categorySlice.js'
+import { fetchUsers } from "../../store/reducers/auth/authSlice.js";
 
 export default function UserInformation() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function UserInformation() {
     logoURL,
     coverURL,
     name,
+    clientName,
     activity,
     bio,
     email,
@@ -49,6 +51,7 @@ export default function UserInformation() {
     setLogoURL,
     setCoverURL,
     setName,
+    setClientName,
     setActivity,
     setBio,
     setEmail,
@@ -70,12 +73,21 @@ export default function UserInformation() {
   } = useUserOptions();
 
   
-
+  const [selectedUser, setSelectedUser] = useState(null);
   const [openSections, setOpenSections] = useState({
     media: true,
     personal: true,
     social: true,
   });
+
+    const users = useSelector((state) => state?.auth?.users);
+
+
+   const userOptions =
+    users?.map((user) => ({
+      value: user?.id,
+      label: `${user?.name} - ${user?.phone}`,
+    })) || [];
 
   const [loading, setLoading] = useState({
     logoURL: false,
@@ -83,9 +95,10 @@ export default function UserInformation() {
   });
 
  const categories = useSelector((state)=>state?.category?.categories);
+ const role = useSelector((state)=>state?.auth?.role);
 
 const options = categories?.map((cat) => ({
-    value: cat?.name,
+    value: cat?.id,
     label: cat?.name,
   })) || [];
 
@@ -97,6 +110,9 @@ const options = categories?.map((cat) => ({
 
     useEffect(()=>{
     dispatch(fetchCategories());
+    if(role === 'admin'){
+      dispatch(fetchUsers());
+    }
   }, [])
 
   useEffect(() => {
@@ -122,6 +138,7 @@ const options = categories?.map((cat) => ({
     setErrors({});
     setProfile({
       name: "",
+      clientName: "",
       activity: "",
       userName: "",
       bio: "",
@@ -139,6 +156,7 @@ const options = categories?.map((cat) => ({
     });
     setQrProfile({
       name: "",
+      clientName: "",
       activity: "",
       userName: "",
       bio: "",
@@ -155,6 +173,7 @@ const options = categories?.map((cat) => ({
       coverURL: "",
     });
     setName("");
+    setClientName("");
     setActivity("");
     setBio("");
     setEmail("");
@@ -177,7 +196,7 @@ const options = categories?.map((cat) => ({
     try {
       const profileData = new FormData();
       profileData.append("name", values.name);
-      profileData.append("activity", values.activity?.label);
+      profileData.append("activity_id", values.activity?.value);
       profileData.append("about_us", values.bio);
       profileData.append("email", values.email);
       profileData.append("address", values.address);
@@ -759,6 +778,53 @@ const options = categories?.map((cat) => ({
                   required
                 />
               </div>
+                   {/* User */}
+{role === "admin" && (
+  
+             
+              <div className="w-full mb-6">
+                <label className="block text-sm font-bold text-[#475569] mb-2 mr-1">
+                  اسم العميل
+                </label>
+
+                <Select
+                  options={userOptions}
+                  value={
+                    userOptions.find(
+                      (option) =>
+                        option.value === selectedUser?.id
+                    ) || null
+                  }
+                  placeholder="برجاء اختيار اسم العميل"
+                  className="font-semibold"
+                  classNamePrefix="custom-select"
+                  isClearable
+                  onChange={(selectedOption) => {
+                    if (!selectedOption) {
+                      setSelectedUser(null);
+                      setClientName("")
+                      return;
+                    }
+
+                    const user = users?.find(
+                      (u) => u?.id === selectedOption.value
+                    );
+
+                    setSelectedUser(user || null);
+                    setClientName(user?.name || "");
+                    setProfile((prev) => ({
+                      ...prev,
+                      clientName: user?.name,                      
+                    }));
+                    setQrProfile((prev) => ({
+                      ...prev,
+                      clientName: user?.name,                      
+                    }));
+                  }}
+                />
+              </div>
+)}
+
               {/* نوع المنشأة */}
               <div className="w-full">
                 <div className="flex items-center gap-x-5 mb-2">

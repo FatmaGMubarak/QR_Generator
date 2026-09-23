@@ -28,7 +28,7 @@ import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
 
 import { fetchUsers } from "../../store/reducers/auth/authSlice";
 
-export default function AdminCreateProfile() {
+export default function AdminCreateSubscription() {
   const [name, setName] = useState("");
 
   const [profileLimit, setProfileLimit] = useState(1);

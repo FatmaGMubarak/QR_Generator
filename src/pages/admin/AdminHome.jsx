@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Search from '../../components/common/Search'
 import CategoriesListing from '../../components/common/CategoriesListing'
 import CategoryCard from '../../components/common/CategoryCard'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchProfiles } from '../../store/reducers/profileSlice'
+import { fetchHomeProfiles, fetchProfiles } from '../../store/reducers/profileSlice'
 import CategorySlideshow from '../../components/common/CategorySlideshow'
 import { useLocation } from 'react-router-dom'
 import { fetchCategories } from '../../store/reducers/categorySlice'
@@ -14,7 +14,12 @@ import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 
 
 export default function AdminHome() {
-  const profiles = useSelector((state)=> state?.profile?.profiles);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  
+  const profiles = useSelector((state)=> state?.profile?.profiles) || [];
+  const homeProfiles = useSelector((state)=> state?.profile?.homeProfiles) || [];
   const loading = useSelector((state)=> state?.profile?.loading);
   const categories = useSelector((state)=> state?.category?.categories);
 
@@ -25,8 +30,51 @@ export default function AdminHome() {
 
   useEffect(()=>{
     dispatch(fetchProfiles());
-    dispatch(fetchCategories());
+    dispatch(fetchHomeProfiles());
   }, [dispatch]);
+
+  const normalizeSearchText = (value) => {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+  };
+
+  const normalizedSearch = normalizeSearchText(searchQuery);
+
+  const filteredProfiles = profiles.filter((profile) => {
+    const matchesCategory =
+      selectedCategory === null ||
+      Number(profile?.activity_id) === Number(selectedCategory);
+
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    const profileName = normalizeSearchText(profile?.name);
+    return profileName.includes(normalizedSearch);
+  });
+
+  const filteredHomeProfiles = homeProfiles.filter((profile) => {
+    const matchesCategory =
+      selectedCategory === null ||
+      Number(profile?.activity_id) === Number(selectedCategory);
+
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    const profileName = normalizeSearchText(profile?.name);
+    return profileName.includes(normalizedSearch);
+  });
 
 
   if(loading){
@@ -43,42 +91,46 @@ export default function AdminHome() {
         <CategorySlideshow />
       </div>
       <div className='w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[3%]'>
-        <Search />
-        <CategoriesListing />
+        <Search onSearch={setSearchQuery} />
+        <CategoriesListing
+                onCategorySelect={setSelectedCategory}
+              />
       </div>
 
-      <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[1%]'>
-        <div className='w-full flex justify-between items-center'>
-          <h1 className='text-lg sm:text-xl font-bold'>كل المنشأت</h1>
-         {categories?.length > 4 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
-            <Link to={"/admin/display-all-categories"}>عرض المزيد </Link>
-            <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
-          </div>}
-        </div>
-       {categories?.length > 0 ? ( <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-          {categories?.slice(0, 4)?.map((cat)=>{
-                          return (
-                            <CategoryCard key={cat?.id} logoImg={cat?.img} name={cat?.name} id={cat?.id} isAdmin={isAdmin}/>
-                          )
-                        })}
-        </div>): (
-          <div className='flex items-center justify-center w-full'>
-            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
-          </div>
-        )}
-      </div>
+      <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 lg:pr-5'>
+                    <div className='w-full flex justify-between items-center'>
+                      <h1 className='text-lg sm:text-xl font-bold'>كل المنشآت</h1>
+                      {filteredHomeProfiles?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
+                        <Link to={"/display-all-profiles"}>عرض المزيد </Link>
+                        <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
+                      </div>}
+                    </div>
+                    {filteredHomeProfiles?.length > 0 ? (
+                      <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+                      {filteredHomeProfiles?.slice(0, 4)?.map((profile)=>{
+                      return (
+                        <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin} activity={profile?.activity_id}/>
+                      )
+                    })}
+                    </div>
+                    ) :(
+                      <div className='flex items-center justify-center w-full'>
+                        <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+                      </div>
+                    )}
+                  </div>
       <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]'>
         <div className='w-full flex justify-between items-center'>
           <h1 className='text-lg sm:text-xl font-bold'>الصفحات الشخصية</h1>
-         {profiles?.length > 4 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
+         {filteredProfiles?.length > 4 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
             <Link to={"/admin/display-all-profiles"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
-       {profiles?.length > 0 ? ( <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
-          {profiles?.slice(0, 4)?.map((profile)=>{
+       {filteredProfiles?.length > 0 ? ( <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+          {filteredProfiles?.slice(0, 4)?.map((profile)=>{
           return (
-            <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin}/>
+            <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin} activity={profile?.activity_id}/>
           )
         })}
         </div>) : (

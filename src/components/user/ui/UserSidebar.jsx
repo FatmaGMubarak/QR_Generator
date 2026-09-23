@@ -29,7 +29,7 @@ const links = [
 export default function UserSidebar() {
   const { isSidebarOpen, setIsSidebarOpen, handleCancel } = useUserOptions();
 
-  const ssUser = JSON.parse(sessionStorage.getItem("user"));
+  const ssUser = JSON.parse(localStorage.getItem("user"));
 
 
   const token = useSelector((state)=> state?.auth?.token);
@@ -52,8 +52,8 @@ export default function UserSidebar() {
     try {
       if(!token) return;
       const response = await dispatch(logOut()).unwrap();
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       notify(response.message, "success");
       navigate("/login");
 

@@ -113,8 +113,8 @@ const authSlice = createSlice({
     initialAuth: (state) => {
       const { token } = loadData();
 
-      const storedUser = sessionStorage.getItem("user");
-      const storedRole = sessionStorage.getItem("role");
+      const storedUser = localStorage.getItem("user");
+      const storedRole = localStorage.getItem("role");
 
       if (token) {
         state.token = token;
@@ -157,11 +157,11 @@ const authSlice = createSlice({
         state.role = role;
         state.token = token;
 
-        sessionStorage.setItem("user", JSON.stringify(user));
-        sessionStorage.setItem("role", role);
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("role", role);
 
         if (token) {
-          sessionStorage.setItem("token", token);
+          localStorage.setItem("token", token);
 
           Cookies.set("token", token, {
             expires: 7,
@@ -192,11 +192,11 @@ const authSlice = createSlice({
         state.role = role;
         state.token = token;
 
-        sessionStorage.setItem("user", JSON.stringify(user));
-        sessionStorage.setItem("role", role);
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("role", role);
 
         if (token) {
-          sessionStorage.setItem("token", token);
+          localStorage.setItem("token", token);
 
           Cookies.set("token", token, {
             expires: 7,
@@ -251,9 +251,9 @@ const authSlice = createSlice({
 
         Cookies.remove("token");
 
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("user");
-        sessionStorage.removeItem("role");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
       })
 
       .addCase(logOut.rejected, (state, action) => {

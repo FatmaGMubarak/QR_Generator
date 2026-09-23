@@ -113,7 +113,6 @@ export default function PasswordConfirm() {
           },
           validationSchema: signupSchema,
           onSubmit: (values, { setSubmitting }) => {
-            console.log(values);
             setSubmitting(false);
           },
         });

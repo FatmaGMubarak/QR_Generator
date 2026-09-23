@@ -9,6 +9,7 @@ export default function useUserInformationLogic() {
   const [coverURL, setCoverURL] = useState("");
     const [qrValue, setQrValue] = useState(storedProfile?.qrValue || "");
   const [name, setName] = useState("");
+  const [clientName, setClientName] = useState("");
   const [activity, setActivity] = useState("");
   const [bio, setBio] = useState("");
   const [email, setEmail] = useState("");
@@ -30,6 +31,7 @@ export default function useUserInformationLogic() {
   const [profile, setProfile] = useState({
     qrValue: storedProfile?.qrValue || "",
     name: storedProfile?.name ||"",
+    clientName: storedProfile?.clientName ||"",   
     activity: storedProfile?.activity ||"",
     userName: storedProfile?.name|| "",
     bio: storedProfile?.bio ||"",
@@ -48,6 +50,7 @@ export default function useUserInformationLogic() {
   const [editrofile, setEditProfile] = useState({
     qrValue: storedProfileEdit?.qrValue || "",
     name: storedProfileEdit?.name ||"",
+    clientName: storedProfileEdit?.clientName ||"",
     activity: storedProfile?.activity ||"",
     userName: storedProfileEdit?.name|| "",
     bio: storedProfileEdit?.bio ||"",
@@ -65,6 +68,7 @@ export default function useUserInformationLogic() {
   })
   const [qrProfile, setQrProfile] = useState({
     name: storedQrProfile?.name ||"",
+    clientName: storedQrProfile?.clientName ||"",
     activity: storedProfile?.activity ||"",
     userName: storedQrProfile?.userName ||"",
     bio: storedQrProfile?.bio ||"",
@@ -82,6 +86,7 @@ export default function useUserInformationLogic() {
   })
   const [editQrProfile, setEditQrProfile] = useState({
     name: storedQrProfileEdit?.name ||"",
+    clientName: storedQrProfileEdit?.clientName ||"",
     activity: storedProfile?.activity ||"",
     userName: storedQrProfileEdit?.userName ||"",
     bio: storedQrProfileEdit?.bio ||"",
@@ -103,6 +108,7 @@ export default function useUserInformationLogic() {
       sessionStorage.removeItem("QR Profile");
       setProfile({
         name: "",
+        clientName: "",
         userName: "",
         activity: "",
         bio: "",
@@ -124,6 +130,7 @@ export default function useUserInformationLogic() {
       });
       setQrProfile({
         name: "",
+        clientName: "",
         userName: "",
         activity: "",
         bio: "",
@@ -140,6 +147,7 @@ export default function useUserInformationLogic() {
         coverURL: "",
       });
       setName("");
+      setClientName("");
       setActivity("");
       setBio("");
       setEmail("");
@@ -158,6 +166,7 @@ export default function useUserInformationLogic() {
     logoURL,
     coverURL,
     name,
+    clientName,
     activity,
     bio,
     phoneNumber,
@@ -184,6 +193,7 @@ export default function useUserInformationLogic() {
     setLogoURL,
     setCoverURL,
     setName,
+    setClientName,
     setActivity,
     setBio,
     setPhoneNumber,

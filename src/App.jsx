@@ -26,7 +26,7 @@ import Home from "./pages/Home";
 import EditProfile from "./pages/EditProfile";
 
 import AdminHome from "./pages/admin/AdminHome";
-import AdminCreateProfile from "./pages/admin/AdminCreateProfile";
+import AdminCreateSubscription from "./pages/admin/AdminCreateSubscription";
 import AdminCreateCategory from "./pages/admin/AdminCreateCategory";
 import AdminEditCategory from "./pages/admin/AdminEditCategory";
 import AdminChangePassword from "./pages/admin/AdminChangePassword";
@@ -158,7 +158,12 @@ export default function App() {
 
               <Route
                 path="create-profile"
-                element={<AdminCreateProfile />}
+                element={<Home />}
+              />
+
+              <Route
+                path="create-subscription"
+                element={<AdminCreateSubscription />}
               />
 
               <Route

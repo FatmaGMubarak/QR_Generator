@@ -75,8 +75,8 @@ export default function AdminTopbar() {
     try {
       if (!token) return;
       const response = await dispatch(logOut()).unwrap();
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       notify(response.message, "success");
       navigate("/login");
     } catch (error) {

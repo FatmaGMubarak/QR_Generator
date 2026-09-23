@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   Receipt,
   Menu,
+  CalendarCheck
 } from "lucide-react";
 
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
@@ -38,9 +39,15 @@ const links = [
     end: true,
   },
   {
+    to: "/admin/create-subscription",
+    label: "انشاء اشتراك",
+    icon: Receipt,
+    end: true,
+  },
+  {
     to: "/admin/subscriptions",
     label: "الاشتراكات",
-    icon: Receipt,
+    icon: CalendarCheck,
     end: true,
   },
   {
@@ -57,7 +64,7 @@ export default function AdminSidebar() {
   // const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { isSidebarOpen, setIsSidebarOpen } = useUserOptions();
 
-  const ssUser = JSON.parse(sessionStorage.getItem("user"));
+  const ssUser = JSON.parse(localStorage.getItem("user"));
 
   const navigate = useNavigate();
 
@@ -77,8 +84,8 @@ export default function AdminSidebar() {
     try {
       if (!token) return;
       const response = await dispatch(logOut()).unwrap();
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       notify(response.message, "success");
       navigate("/login");
     } catch (error) {

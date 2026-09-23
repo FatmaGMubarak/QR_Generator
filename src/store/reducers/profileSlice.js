@@ -143,7 +143,7 @@ extraReducers: (builder) =>{
     })
     .addCase(fetchHomeProfiles.fulfilled, (state, action)=>{
         state.loading = false;
-        state.homeProfiles = action?.payload;
+        state.homeProfiles = action?.payload?.data;
     })
     .addCase(fetchHomeProfiles.rejected, (state, action)=>{
         state.loading = false;

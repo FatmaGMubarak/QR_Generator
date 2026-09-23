@@ -76,7 +76,6 @@ export default function ForgetPassword() {
     },
     validationSchema: baseSchema,
     onSubmit: (values, { setSubmitting }) => {
-      console.log(values);
       setSubmitting(false);
     },
   });

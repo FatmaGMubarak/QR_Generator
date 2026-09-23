@@ -48,7 +48,7 @@ export default function DisplayAllCategories() {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8  mt-[20%] sm:mt-[7%]">
       <h2 className="mb-6 text-center font-['Cairo'] text-2xl font-extrabold text-[#244238]">
         المنشأت
       </h2>

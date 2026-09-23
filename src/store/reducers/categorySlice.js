@@ -126,7 +126,7 @@ extraReducers: (builder) =>{
     })
     .addCase(fetchHomeCategories.fulfilled, (state, action)=>{
         state.loading = false;
-        state.homeCategories = action?.payload;
+        state.homeCategories = action?.payload?.activities;
     })
     .addCase(fetchHomeCategories.rejected, (state, action)=>{
         state.loading = false;

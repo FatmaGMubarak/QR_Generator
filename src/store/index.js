@@ -8,7 +8,7 @@ import notificationSlice from './reducers/notificationSlice';
 
 const preloadedState = {
   auth: {
-    token: Cookies.get("token") || sessionStorage.getItem("token") || null,
+    token: Cookies.get("token") || localStorage.getItem("token") || null,
     loading: false,
     error: null,
   },
