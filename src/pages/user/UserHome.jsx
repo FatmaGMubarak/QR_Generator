@@ -130,29 +130,35 @@ export default function AdminHome() {
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
-              <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+              {categories?.length > 0 ? (<div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
                 {categories?.slice(0, 4)?.map((cat)=>{
                 return (
                   <CategoryCard key={cat?.id} logoImg={cat?.img} name={cat?.name} id={cat?.id} isAdmin={isAdmin}/>
                 )
               })}
-              </div>
+              </div>) : (<div className='flex items-center justify-center w-full'>
+            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+          </div>)}
             </div>
             <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]'>
               <div className='w-full flex justify-between items-center'>
           <h1 className='text-lg sm:text-xl font-bold'>الصفحات الشخصية</h1>
-         {profile?.length > 0 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
+         {profiles?.length > 0 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
             <Link to={"/user/display-all-profiles"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
-              <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+              {profiles?.length > 0 ? (<div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
                 {profiles?.slice(0, 4)?.map((profile)=>{
                 return (
                   <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin}/>
                 )
               })}
-              </div>
+              </div>): (
+                <div className='flex items-center justify-center w-full'>
+            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+          </div>
+              )}
             </div>
 
     </div>

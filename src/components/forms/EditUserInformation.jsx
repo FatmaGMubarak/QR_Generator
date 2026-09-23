@@ -138,39 +138,12 @@ const options = categories?.map((cat) => ({
   }, [editQrProfile]);
 
     const handleCancel = async () => {
-  const deleteRequests = [];
-
-  if (profile?.logoURLDeleteToken) {
-    const logoData = new FormData();
-    logoData.append("token", profile?.logoURLDeleteToken);
-    
-    deleteRequests.push(
-      fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`, {
-        method: "POST",
-        body: logoData,
-      })
-    );
+  // Revoke any local object URLs we created for previews to avoid memory leaks
+  if (logoURL?.startsWith("blob:")) {
+    URL.revokeObjectURL(logoURL);
   }
-
-  if (profile?.coverURLDeleteToken) {
-    const coverData = new FormData();
-    coverData.append("token", profile?.coverURLDeleteToken);
-    
-    deleteRequests.push(
-      fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`, {
-        method: "POST",
-        body: coverData,
-      })
-    );
-  }
-
-  if (deleteRequests?.length > 0) {
-    try {
-      await Promise.all(deleteRequests);
-      console.log("All selected images deleted from Cloudinary successfully");
-    } catch (error) {
-      console.error("Failed to delete one or more images from Cloudinary:", error);
-    }
+  if (coverURL?.startsWith("blob:")) {
+    URL.revokeObjectURL(coverURL);
   }
 
   sessionStorage.removeItem("profile");
@@ -194,10 +167,6 @@ const options = categories?.map((cat) => ({
     whatsappURL: "",
     logoURL: "",
     coverURL: "",
-    logoURLPublicId: "",
-    logoURLDeleteToken: "",
-    coverURLPublicId: "",
-    coverURLDeleteToken: "",
     })
     setEditQrProfile({
       name: "",
@@ -480,96 +449,46 @@ const submitProfilePage = async (values) => {
       return;
     }
 
-    const result = await uploadImage(file);
-    if (result) {
-      const { secure_url, public_id, delete_token } = result;
-      if (fieldName === "logoImageFile") {
-        setEditProfile((prev) => ({
-          ...prev,
-          logoURLPublicId: public_id,
-          logoURLDeleteToken: delete_token,
-        }));
-      }
-      if (fieldName === "coverImageFile") {
-        setEditProfile((prev) => ({
-          ...prev,
-          coverURLPublicId: public_id,
-          coverURLDeleteToken: delete_token,
-        }));
-      }
-      successCallback(secure_url);
+    // No upload needed — just create a local preview URL for the selected file.
+    // The actual File object is already stored in formik state (logoImageFile /
+    // coverImageFile) and gets sent to the backend in submitProfilePage.
+    const previewUrl = createLocalPreview(file);
+    if (previewUrl) {
+      successCallback(previewUrl);
     }
   };
 
-  const uploadImage = async (file, fieldName) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "QR_Profiles");
-    setLoading((prev) => ({ ...prev, [fieldName]: true }));
-
+  const createLocalPreview = (file) => {
     try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const data = await response.json();
-      setLoading((prev) => ({ ...prev, [fieldName]: false }));
-      return {
-        secure_url: data.secure_url,
-        public_id: data.public_id,
-        delete_token: data.delete_token,
-      };
+      return URL.createObjectURL(file);
     } catch (error) {
-      setLoading((prev) => ({ ...prev, [fieldName]: false }));
+      console.error("Failed to create local preview for file:", error);
       return null;
     }
   };
 
-  const deleteImageFromCloudinary = async (deleteToken) => {
-    if (!deleteToken) return;
-    const formData = new FormData();
-    formData.append("token", deleteToken);
-
-    try {
-      await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-      console.log("Image deleted from Cloudinary successfully");
-    } catch (error) {
-      console.error("Failed to delete image from Cloudinary:", error);
-    }
-  };
-
-  const deleteImage = async (imgName) => {
+  const deleteImage = (imgName) => {
     if (imgName === "logoURL" && profile?.logo?.length > 0) {
-      await deleteImageFromCloudinary(profile?.logoURLDeleteToken);
+      if (logoURL?.startsWith("blob:")) {
+        URL.revokeObjectURL(logoURL);
+      }
       formik.setFieldValue("logoImageFile", null);
       setLogoURL("");
       setEditProfile((prev) => ({
         ...prev,
         logoURL: "",
-        logoURLPublicId: "",
-        logoURLDeleteToken: "",
       }));
       setEditQrProfile((prev) => ({ ...prev, logoURL: "" }));
     }
     if (imgName === "coverURL" && profile?.cover?.length > 0) {
-      await deleteImageFromCloudinary(profile?.coverURLDeleteToken);
+      if (coverURL?.startsWith("blob:")) {
+        URL.revokeObjectURL(coverURL);
+      }
       formik.setFieldValue("coverImageFile", null);
       setCoverURL("");
       setEditProfile((prev) => ({
         ...prev,
         coverURL: "",
-        coverURLPublicId: "",
-        coverURLDeleteToken: "",
       }));
       setEditQrProfile((prev) => ({ ...prev, coverURL: "" }));
     }

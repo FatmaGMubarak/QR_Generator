@@ -37,7 +37,7 @@ export const markRead = createAsyncThunk(
                     Authorization: `Bearer ${token}`
                 }
             }
-            const response = await api.post(`/api/notification/${id}/read`, config)
+            const response = await api.post(`/api/notifications/${id}/read`, config)
             return response.data
         }catch(error){
             return rejectWithValue(error.response?.data || error.message)

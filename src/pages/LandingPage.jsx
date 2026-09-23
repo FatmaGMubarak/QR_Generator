@@ -56,13 +56,17 @@ export default function LandingPage() {
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
-        <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+        {homeCategories?.length > 0 ? (
+          <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
           {homeCategories?.slice(0, 4)?.map((cat)=>{
                           return (
                             <CategoryCard key={cat?.id} logoImg={cat?.img} name={cat?.name} id={cat?.id} isAdmin={isAdmin}/>
                           )
                         })}
         </div>
+        ) : (<div className='flex items-center justify-center w-full'>
+            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+          </div>)}
       </div>
       <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%] lg:pr-5'>
         <div className='w-full flex justify-between items-center'>
@@ -72,13 +76,19 @@ export default function LandingPage() {
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
-        <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
+        {homeProfiles?.length > 0 ? (
+          <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
           {homeProfiles?.slice(0, 4)?.map((profile)=>{
           return (
             <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin}/>
           )
         })}
         </div>
+        ) :(
+          <div className='flex items-center justify-center w-full'>
+            <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
+          </div>
+        )}
       </div>
 
     </div>

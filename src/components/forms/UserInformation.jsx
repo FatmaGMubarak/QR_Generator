@@ -108,49 +108,13 @@ const options = categories?.map((cat) => ({
   }, [qrProfile]);
 
   const handleCancel = async () => {
-    const deleteRequests = [];
-
-    if (profile?.logoURLDeleteToken) {
-      const logoData = new FormData();
-      logoData.append("token", profile?.logoURLDeleteToken);
-
-      deleteRequests.push(
-        fetch(
-          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`,
-          {
-            method: "POST",
-            body: logoData,
-          },
-        ),
-      );
+    if (profile?.logoURL?.startsWith("blob:")) {
+      URL.revokeObjectURL(profile.logoURL);
+    }
+    if (profile?.coverURL?.startsWith("blob:")) {
+      URL.revokeObjectURL(profile.coverURL);
     }
 
-    if (profile?.coverURLDeleteToken) {
-      const coverData = new FormData();
-      coverData.append("token", profile.coverURLDeleteToken);
-
-      deleteRequests.push(
-        fetch(
-          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`,
-          {
-            method: "POST",
-            body: coverData,
-          },
-        ),
-      );
-    }
-
-    if (deleteRequests.length > 0) {
-      try {
-        await Promise.all(deleteRequests);
-        console.log("All selected images deleted from Cloudinary successfully");
-      } catch (error) {
-        console.error(
-          "Failed to delete one or more images from Cloudinary:",
-          error,
-        );
-      }
-    }
     sessionStorage.removeItem("profileCreated");
     sessionStorage.removeItem("QR Profile");
     formik.resetForm();
@@ -172,10 +136,6 @@ const options = categories?.map((cat) => ({
       whatsappURL: "",
       logoURL: "",
       coverURL: "",
-      logoURLPublicId: "",
-      logoURLDeleteToken: "",
-      coverURLPublicId: "",
-      coverURLDeleteToken: "",
     });
     setQrProfile({
       name: "",
@@ -461,96 +421,46 @@ const options = categories?.map((cat) => ({
       return;
     }
 
-    const result = await uploadImage(file, fieldName);
-    if (result) {
-      const { secure_url, public_id, delete_token } = result;
-      if (fieldName === "logoImageFile") {
-        setProfile((prev) => ({
-          ...prev,
-          logoURLPublicId: public_id,
-          logoURLDeleteToken: delete_token,
-        }));
-      }
-      if (fieldName === "coverImageFile") {
-        setProfile((prev) => ({
-          ...prev,
-          coverURLPublicId: public_id,
-          coverURLDeleteToken: delete_token,
-        }));
-      }
-      successCallback(secure_url);
+    // No upload needed — just create a local preview URL for the selected file.
+    // The actual File object is already stored in formik state (logoImageFile /
+    // coverImageFile) and gets sent to the backend in submitProfilePage.
+    const previewUrl = createLocalPreview(file);
+    if (previewUrl) {
+      successCallback(previewUrl);
     }
   };
 
-  const uploadImage = async (file, fieldName) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "QR_Profiles");
-    setLoading((prev) => ({ ...prev, [fieldName]: true }));
-
+  const createLocalPreview = (file) => {
     try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const data = await response.json();
-      setLoading((prev) => ({ ...prev, [fieldName]: false }));
-      return {
-        secure_url: data.secure_url,
-        public_id: data.public_id,
-        delete_token: data.delete_token,
-      };
+      return URL.createObjectURL(file);
     } catch (error) {
-      setLoading((prev) => ({ ...prev, [fieldName]: false }));
+      console.error("Failed to create local preview for file:", error);
       return null;
     }
   };
 
-  const deleteImageFromCloudinary = async (deleteToken) => {
-    if (!deleteToken) return;
-    const formData = new FormData();
-    formData.append("token", deleteToken);
-
-    try {
-      await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_DOMAIN_NAME}/delete_by_token`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-      console.log("Image deleted from Cloudinary successfully");
-    } catch (error) {
-      console.error("Failed to delete image from Cloudinary:", error);
-    }
-  };
-
-  const deleteImage = async (imgName) => {
+  const deleteImage = (imgName) => {
     if (imgName === "logoURL" && profile?.logoURL.length > 0) {
-      await deleteImageFromCloudinary(profile?.logoURLDeleteToken);
+      if (profile.logoURL.startsWith("blob:")) {
+        URL.revokeObjectURL(profile.logoURL);
+      }
       formik.setFieldValue("logoImageFile", null);
       setLogoURL("");
       setProfile((prev) => ({
         ...prev,
         logoURL: "",
-        logoURLPublicId: "",
-        logoURLDeleteToken: "",
       }));
       setQrProfile((prev) => ({ ...prev, logoURL: "" }));
     }
     if (imgName === "coverURL" && profile?.coverURL.length > 0) {
-      await deleteImageFromCloudinary(profile?.coverURLDeleteToken);
+      if (profile.coverURL.startsWith("blob:")) {
+        URL.revokeObjectURL(profile.coverURL);
+      }
       formik.setFieldValue("coverImageFile", null);
       setCoverURL("");
       setProfile((prev) => ({
         ...prev,
         coverURL: "",
-        coverURLPublicId: "",
-        coverURLDeleteToken: "",
       }));
       setQrProfile((prev) => ({ ...prev, coverURL: "" }));
     }
@@ -1195,7 +1105,7 @@ const options = categories?.map((cat) => ({
                     </div>
 
                     <div className="flex items-center gap-4 flex-shrink-0">
-                      {/* Remove */}
+                      {/* Remove btn */}
                       <button
                         type="button"
                         onClick={() => {

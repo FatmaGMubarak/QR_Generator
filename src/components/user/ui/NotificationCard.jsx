@@ -1,12 +1,28 @@
-import { MessageCircleWarning } from 'lucide-react';
+import { CheckCheck, Eye, MessageCircleWarning } from 'lucide-react';
 import React, { useEffect } from 'react'
+import notify from '../../../hooks/Notifications';
+import { useDispatch } from 'react-redux';
+import { fetchNotifications, markRead } from '../../../store/reducers/notificationSlice';
 
-export default function NotificationCard({notification}) {
-    useEffect(()=>{
-        console.log(notification)
-    }, [])
+export default function NotificationCard({notification, setIsNotificationOpen}) {
+  const dispatch = useDispatch();
+    
+  const handleRead = async() => {
+    try{
+      const response = await dispatch(markRead(notification?.id)).unwrap();
+      if(response){
+        notify(response.messgae, "success");
+        await(dispatch(fetchNotifications()));
+        setIsNotificationOpen(false);
+      }
+
+    }catch(err){
+      notify(err.message || "برجاء المحاولة مرة أخرى" , "error")
+    }
+  }
+
  const isSubscriptionExpiring =
-    notification?.type === "الاشتراك على وشك الانتهاء";
+    notification?.data?.type === "الاشتراك على وشك الانتهاء";
 
   return (
     <div
@@ -86,7 +102,7 @@ export default function NotificationCard({notification}) {
 
           {/* Message */}
           <p className="mt-1.5 text-[11px] font-medium leading-5 text-gray-500">
-            {notification?.message}
+            {notification?.data?.message}
           </p>
 
           {/* Subscription information */}
@@ -97,7 +113,7 @@ export default function NotificationCard({notification}) {
               </span>
 
               <span className="text-[11px] font-extrabold text-amber-600">
-                {notification?.days_remaining} أيام
+                {notification?.data?.days_remaining} أيام
               </span>
 
               <span className="h-3 w-px bg-gray-200" />
@@ -107,12 +123,13 @@ export default function NotificationCard({notification}) {
               </span>
 
               <span className="text-[10px] font-bold text-gray-600">
-                {notification?.end_date}
+                {notification?.data?.end_date}
               </span>
             </div>
           )}
 
-          {/* Action */}
+          <div className='w-full flex items-center justify-between'>
+            {/* Action */}
           {isSubscriptionExpiring && (
             <button
               className="
@@ -128,6 +145,21 @@ export default function NotificationCard({notification}) {
               تجديد الاشتراك ←
             </button>
           )}
+
+          <button
+          onClick={handleRead}
+          className='flex items-center gap-x-1 mt-2.5
+                text-[10px]
+                font-extrabold
+                text-[#34744f]
+                transition-colors
+                hover:text-[#285c3d]
+                hover:underline '>
+            <span> تحديد كمقروء</span>
+            <CheckCheck className='text-xs'/>
+           
+          </button>
+          </div>
         </div>
       </div>
     </div>

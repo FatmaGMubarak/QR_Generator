@@ -267,7 +267,8 @@ export default function UserTopbar() {
           {notifications.slice(0, 2).map((notific, index) => (
             <NotificationCard
               key={notific.id || index}
-              notification={notific?.data}
+              notification={notific}
+              setIsNotificationOpen = {setIsNotificationOpen}
             />
           ))}
         </div>

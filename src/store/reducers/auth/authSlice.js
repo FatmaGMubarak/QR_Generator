@@ -5,6 +5,7 @@ import { loadData } from "../../../utilis/loadData";
 
 const initialState = {
   initialized: false,
+  users: [],
   user: null,
   role: null,
   token: null,
@@ -30,6 +31,18 @@ export const register = createAsyncThunk(
   async (registerData, { rejectWithValue }) => {
     try {
       const response = await api.post("/api/register", registerData);
+      return response?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchUsers = createAsyncThunk(
+  "/users",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/api/users");
       return response?.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -196,6 +209,19 @@ const authSlice = createSlice({
         state.error = action?.payload?.message || "Registration failed";
       })
 
+      .addCase(fetchUsers.pending, (state) =>{
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action)=> {
+        state.users = action?.payload?.data;
+        state.loading = false;
+        
+      })
+      .addCase(fetchUsers.rejected, (state, action)=>{
+        state.loading = false;
+        state.error = action?.payload?.message;
+      })
       .addCase(getActiveUser.pending, (state) =>{
         state.loading = true;
         state.error = null;

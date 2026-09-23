@@ -239,11 +239,7 @@ export default function CategoriesListing() {
                       transition-transform
                       duration-700
 
-                      ${
-                        !isActive
-                          ? "group-hover:translate-x-full"
-                          : ""
-                      }
+                      ${!isActive ? "group-hover:translate-x-full" : ""}
                     `}
                   />
 
@@ -296,9 +292,7 @@ export default function CategoriesListing() {
                     />
                   </span>
 
-                  <span className="relative z-10">
-                    {cat.name}
-                  </span>
+                  <span className="relative z-10">{cat.name}</span>
 
                   {isActive && (
                     <span
