@@ -171,7 +171,7 @@ export default function ProfileCard({logoImg, name, activity,slug, isAdmin}) {
         {/* Button */}
         <div className="mt-5 flex justify-center">
           <a
-            href={isAdmin ? `/admin/display-profile/${slug}` :isUser ? `/user/display-profile/${slug}` : `/profile/${slug}`}
+            href={isAdmin ? `/admin/display-profile/${slug}` :isUser ? `/user/display-profile/${slug}` : `/${slug}`}
             className="
               group/button
               relative

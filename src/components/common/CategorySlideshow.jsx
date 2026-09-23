@@ -1,40 +1,44 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "../../store/reducers/categorySlice";
 
-const slides = [
-  {
-    id: 1,
-    image:
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
-    title: "اكتشف أفضل المطاعم حولك",
-    subtitle: "تنوع من المأكولات يرضي كل الأذواق",
-  },
-  {
-    id: 2,
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop",
-    title: "تسوق من أفضل المتاجر",
-    subtitle: "منتجات مختارة بعناية من منشآت موثوقة",
-  },
-  {
-    id: 3,
-    image:
-      "https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=1600&auto=format&fit=crop",
-    title: "خدمات تلبي احتياجاتك اليومية",
-    subtitle: "دليلك الشامل لكل ما تبحث عنه",
-  },
-];
+// const slides = [
+//   {
+//     id: 1,
+//     image:
+//       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
+//     title: "اكتشف أفضل المطاعم حولك",
+//     subtitle: "تنوع من المأكولات يرضي كل الأذواق",
+//   },
+//   {
+//     id: 2,
+//     image:
+//       "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop",
+//     title: "تسوق من أفضل المتاجر",
+//     subtitle: "منتجات مختارة بعناية من منشآت موثوقة",
+//   },
+//   {
+//     id: 3,
+//     image:
+//       "https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=1600&auto=format&fit=crop",
+//     title: "خدمات تلبي احتياجاتك اليومية",
+//     subtitle: "دليلك الشامل لكل ما تبحث عنه",
+//   },
+// ];
 
-const AUTOPLAY_MS = 3000;
+const AUTOPLAY_MS = 2000;
 
 export default function CategorySlideshow() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const categories = useSelector((state)=>state?.category?.categories);
+  const dispatch = useDispatch();
 
   const timerRef = useRef(null);
   const touchStartX = useRef(null);
 
-  const count = slides.length;
+  const count = categories.length;
 
   const goTo = useCallback(
     (i) => {
@@ -51,9 +55,9 @@ export default function CategorySlideshow() {
     setIndex((i) => (i - 1 + count) % count);
   }, [count]);
 
-  /* -----------------------------
-     Autoplay
-  ----------------------------- */
+  useEffect(()=>{
+    dispatch(fetchCategories());
+  }, [dispatch])
 
   useEffect(() => {
     if (paused) return;
@@ -65,9 +69,6 @@ export default function CategorySlideshow() {
     return () => clearInterval(timerRef.current);
   }, [paused, count]);
 
-  /* -----------------------------
-     Keyboard navigation
-  ----------------------------- */
 
   useEffect(() => {
     const onKey = (e) => {
@@ -82,9 +83,6 @@ export default function CategorySlideshow() {
     };
   }, [next, prev]);
 
-  /* -----------------------------
-     Touch swipe
-  ----------------------------- */
 
   const onTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -143,7 +141,8 @@ export default function CategorySlideshow() {
           transform: `translateX(${index * (100 / count)}%)`,
         }}
       >
-        {slides.map((slide, i) => (
+        {categories?.length > 0 &&
+        categories?.slice(0, 5).map((slide, i) => (
           <div
             key={slide.id}
             className="
@@ -160,8 +159,8 @@ export default function CategorySlideshow() {
             {/* Image */}
 
             <img
-              src={slide.image}
-              alt={slide.title}
+              src={slide.img}
+              alt={slide.name}
               draggable={false}
               className={`
                 absolute
@@ -232,7 +231,7 @@ export default function CategorySlideshow() {
               >
                 {/* Small label */}
 
-                <div
+                {/* <div
                   className="
                     inline-flex
                     items-center
@@ -252,7 +251,7 @@ export default function CategorySlideshow() {
                   <span className="w-1.5 h-1.5 rounded-full bg-white" />
 
                   اكتشف المزيد
-                </div>
+                </div> */}
 
                 {/* Title */}
 
@@ -268,23 +267,12 @@ export default function CategorySlideshow() {
                     drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]
                   "
                 >
-                  {slide.title}
+                  {slide.name}
                 </h2>
 
                 {/* Subtitle */}
 
-                <p
-                  className="
-                    mt-3
-                    text-white/85
-                    text-sm
-                    sm:text-base
-                    leading-6
-                    max-w-md
-                  "
-                >
-                  {slide.subtitle}
-                </p>
+                
               </div>
             </div>
           </div>
@@ -386,7 +374,7 @@ export default function CategorySlideshow() {
           border border-white/10
         "
       >
-        {slides.map((_, i) => (
+        {categories.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}

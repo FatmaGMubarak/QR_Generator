@@ -4,28 +4,44 @@ import { RiDeleteBin5Fill } from "react-icons/ri";
 import { FaLongArrowAltLeft } from "react-icons/fa";
 import { X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { createCategory, updateCategory } from "../../store/reducers/categorySlice";
+import { fetchCategories, updateCategory } from "../../store/reducers/categorySlice";
 import notify from "../../hooks/Notifications";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function AdminEditCategory() {
+  const { id } = useParams();
+  const categories = useSelector((state) => state?.category?.categories) || [];
+  const selectedCategory = categories.find(
+    (cat) => String(cat?.id) === String(id)
+  );
+
   const [name, setName] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
+  const [initialized, setInitialized] = useState(false);
   const inputRef = useRef(null);
 
-  const {id} = useParams();
-
-    const loading = useSelector((state)=> state?.category?.loading);
-
+  const loading = useSelector((state) => state?.category?.loading);
 
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
 
-  const isValid = name.trim().length >= 2;
+  const isValid = name?.trim().length >= 2;
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  // Populate the form once the category data actually arrives
+  useEffect(() => {
+    if (!initialized && selectedCategory) {
+      setName(selectedCategory?.name || "");
+      setPreviewUrl(selectedCategory?.img || "");
+      setInitialized(true);
+    }
+  }, [initialized, selectedCategory]);
 
   const acceptFile = (file) => {
     if (!file) return;
@@ -44,53 +60,56 @@ export default function AdminEditCategory() {
   };
 
   const removeImage = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl && imageFile) URL.revokeObjectURL(previewUrl);
     setImageFile(null);
     setPreviewUrl("");
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
-    try{
+    try {
       e.preventDefault();
-    if (!name.trim()) {
-      setError("برجاء كتابة الاسم");
-      return;
-    }
-   
-    setError("");
-    const newCategoryData = new FormData();
-    newCategoryData.append("name", name);
-    if(imageFile){
+      if (!name.trim()) {
+        setError("برجاء كتابة الاسم");
+        return;
+      }
+
+      setError("");
+      const newCategoryData = new FormData();
+      newCategoryData.append("name", name);
+      if (imageFile) {
         newCategoryData.append("img", imageFile);
-    }
-    const response = await dispatch(updateCategory({id: id, newCategoryData: newCategoryData})).unwrap();
-    notify(response.message, "success");
-    navigate("/admin")
-    }catch(err){
-notify(err.message, "error");
+      }
+      const response = await dispatch(
+        updateCategory({ id: id, newCategoryData: newCategoryData })
+      ).unwrap();
+      notify(response.message, "success");
+      navigate("/admin");
+    } catch (err) {
+      notify(err.message, "error");
     }
   };
 
-  const handleCancel = () =>{
-    setName("");
+  const handleCancel = () => {
+    setName(selectedCategory?.name || "");
     setImageFile(null);
-  }
+    setPreviewUrl(selectedCategory?.img || "");
+    setError("");
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  px-4 py-10 selection:bg-[#FFD600] selection:text-[#1E293B]"
-    >
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  px-4 py-10 selection:bg-[#FFD600] selection:text-[#1E293B]">
       <form
         onSubmit={handleSubmit}
         className=" w-[50%] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 p-8 flex flex-col items-center gap-y-7"
       >
         <div className="text-center">
           <h1 className="font-extrabold text-xl text-[#1E293B]">
-           تعديل منشأة
+            تعديل منشأة
           </h1>
           <p className="text-sm text-[#64748B] mt-1.5 font-medium">
-           برجاء ادخال اسم وصورة للمنشأة
+            برجاء ادخال اسم وصورة للمنشأة
           </p>
         </div>
 
@@ -187,29 +206,29 @@ notify(err.message, "error");
           </p>
         )}
 
-       <div className="w-full flex gap-x-3 justify-between">
-         <button
-          type="submit"
-          className={`w-full flex justify-center items-center gap-x-3 px-4 py-3.5 rounded-xl text-white font-bold tracking-wide transition-all duration-300 active:scale-95
-            ${
-              isValid
-                ? "bg-[#fa518f] hover:bg-[#fa518f]/85 shadow-lg shadow-[#fa518f]/25"
-                : "bg-[#fa518f]/50 cursor-not-allowed"
-            }`}
-        >
-         {loading ?  <span className="loader"></span> : 'تعديل المنشأة'} 
-          <FaLongArrowAltLeft />
-        </button>
-         <button
-         onClick={handleCancel}
-          type="button"
-          className={`w-full flex justify-center items-center gap-x-3 px-4 py-3.5 rounded-xl text-white font-bold tracking-wide transition-all duration-300 active:scale-95
-            bg-gray-600/90 hover:bg-gray-600`}
-        >
-         الغاء
-          <X />
-        </button>
-       </div>
+        <div className="w-full flex gap-x-3 justify-between">
+          <button
+            type="submit"
+            className={`w-full flex justify-center items-center gap-x-3 px-4 py-3.5 rounded-xl text-white font-bold tracking-wide transition-all duration-300 active:scale-95
+              ${
+                isValid
+                  ? "bg-[#fa518f] hover:bg-[#fa518f]/85 shadow-lg shadow-[#fa518f]/25"
+                  : "bg-[#fa518f]/50 cursor-not-allowed"
+              }`}
+          >
+            {loading ? <span className="loader"></span> : "تعديل المنشأة"}
+            <FaLongArrowAltLeft />
+          </button>
+          <button
+            onClick={handleCancel}
+            type="button"
+            className={`w-full flex justify-center items-center gap-x-3 px-4 py-3.5 rounded-xl text-white font-bold tracking-wide transition-all duration-300 active:scale-95
+              bg-gray-600/90 hover:bg-gray-600`}
+          >
+            الغاء
+            <X />
+          </button>
+        </div>
       </form>
     </div>
   );

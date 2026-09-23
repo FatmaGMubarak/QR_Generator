@@ -77,7 +77,7 @@ export default function DisplayAllCategories() {
                 key={category.id}
                 id={category.id}
                 name={category.name}
-                logoImg={category.logoImg}
+                logoImg={category.img}
               />
             ))}
           </div>

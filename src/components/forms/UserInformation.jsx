@@ -219,7 +219,7 @@ const options = categories?.map((cat) => ({
       const response = await dispatch(createProfile(profileData)).unwrap();
 
       if (response) {
-        const url = `https://scanned-three.vercel.app/profile/${profile.userName}`;
+        const url = `https://scanned-three.vercel.app/${profile.userName}`;
         setQrValue(url);
         setProfile((prev) => ({
           ...prev,

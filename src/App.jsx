@@ -70,7 +70,7 @@ export default function App() {
           />
 
           <Route
-            path="/profile/:slug"
+            path="/:slug"
             element={<Profile />}
           />
 

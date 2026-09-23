@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   Receipt,
   Menu,
-  CalendarCheck
+  CalendarCheck,
+  Component
 } from "lucide-react";
 
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
@@ -36,6 +37,12 @@ const links = [
     to: "/admin/create-category",
     label: "إنشاء منشأة",
     icon: Group,
+    end: true,
+  },
+  {
+    to: "/admin/display-all-categories",
+    label: "المنشات",
+    icon: Component,
     end: true,
   },
   {
