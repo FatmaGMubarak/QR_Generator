@@ -121,7 +121,7 @@ const options = categories?.map((cat) => ({
 
   useEffect(()=>{
     if(profile){
-      const url = `https://scanned-three.vercel.app/${profile.slug}`;
+      const url = `https://linkaty.online/${profile.slug}`;
     setQrValue(url);
     setEditProfile((prev)=>({
       ...prev,
