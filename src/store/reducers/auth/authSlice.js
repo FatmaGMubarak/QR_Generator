@@ -254,6 +254,10 @@ const authSlice = createSlice({
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("role");
+        sessionStorage.removeItem("profile");
+      sessionStorage.removeItem("QR Profile");
+      sessionStorage.removeItem("profileCreated");
+      sessionStorage.removeItem("QR Profile Edited");
       })
 
       .addCase(logOut.rejected, (state, action) => {

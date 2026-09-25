@@ -54,7 +54,13 @@ export default function UserSidebar() {
       const response = await dispatch(logOut()).unwrap();
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("profile");
+      sessionStorage.removeItem("QR Profile");
+      sessionStorage.removeItem("profileCreated");
+      sessionStorage.removeItem("QR Profile Edited");
+      handleCancel();
       notify(response.message, "success");
+      
       navigate("/login");
 
     } catch (error) {
@@ -186,7 +192,7 @@ export default function UserSidebar() {
                 end={end}
                 onClick={() => {
                   if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                  if(to === "/user/create-profile") handleCancel();
+                  // if(to === "/user/create-profile") handleCancel();
                 }}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${

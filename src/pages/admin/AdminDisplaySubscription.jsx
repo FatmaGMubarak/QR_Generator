@@ -6,36 +6,53 @@ import Toggle from "../../components/common/ui/Toggle";
 import notify from "../../hooks/Notifications";
 import { createSubscription, renewSubscription, fetchSubscriptions, updateSubscription } from "../../store/reducers/subscriptionSlice";
 import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
+import { fetchUsers } from "../../store/reducers/auth/authSlice";
+import Select from "react-select";
+
 
 export default function AdminDisplaySubscription() {
   const { id } = useParams();
 
   const subscriptions = useSelector((state) => state?.subscription?.subscriptions) || [];
   const selectedSubscription = subscriptions.find((sub) => sub?.id == id);
+  
 
   const [name, setName] = useState(selectedSubscription?.name || "");
+  const [selectedUser, setSelectedUser] = useState(selectedSubscription?.user_id);
   const [price, setPrice] = useState(selectedSubscription?.price || "");
   const [active, setActive] = useState(selectedSubscription?.status === "active");
   const [premium, setPremium] = useState(Boolean(selectedSubscription?.premium));
   const [free, setFree] = useState(Boolean(selectedSubscription?.isFree));
   const [billingCycle, setBillingCycle] = useState(selectedSubscription?.type || "monthly");
   const [error, setError] = useState("");
-
+   const users = useSelector((state) => state?.auth?.users);
   const loading = useSelector((state) => state?.subscription?.loading);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = users?.find((u)=>u?.id === selectedUser)
 
-  useEffect(() => {
-    
-    if (selectedSubscription) {
-      setName(selectedSubscription.name || "");
-      setPrice(selectedSubscription.price || "");
-      setActive(selectedSubscription.status === "active");
-      setPremium(Boolean(selectedSubscription.premium));
-      setFree(Boolean(selectedSubscription.isFree));
-      setBillingCycle(selectedSubscription.type || "monthly");
-    }
-  }, [selectedSubscription]);
+
+  
+    useEffect(() => {
+      dispatch(fetchUsers());
+    }, [dispatch]);
+  
+    const options =
+      users?.slice(0, 5)?.map((user) => ({
+        value: user?.id,
+        label: `${user?.name} - ${user?.phone}`,
+      })) || [];
+
+useEffect(() => {
+  if (selectedSubscription) {
+    setSelectedUser(selectedSubscription.user_id || "");
+    setPrice(selectedSubscription.price || "");
+    setActive(selectedSubscription.status === "active");
+    setPremium(Boolean(selectedSubscription.premium));
+    setFree(Boolean(selectedSubscription.isFree));
+    setBillingCycle(selectedSubscription.type || "monthly");
+  }
+}, [selectedSubscription]);
 
   useEffect(()=>{
     dispatch(fetchSubscriptions());
@@ -53,6 +70,7 @@ export default function AdminDisplaySubscription() {
     setError("");
     try {
       const subscriptionData = new FormData();
+      subscriptionData.append("user_id", selectedUser);
       subscriptionData.append("price", price);
       subscriptionData.append("status", active ? "active" : "inactive");
       subscriptionData.append("type", billingCycle);
@@ -130,24 +148,26 @@ export default function AdminDisplaySubscription() {
 
         {/* Name Field */}
         <div className="w-full">
-          <label htmlFor="name" className="block text-sm font-semibold text-slate-600 mb-2">
-            اسم الاشتراك
+          <label
+            htmlFor="name"
+            className="block text-sm font-bold text-[#475569] mb-2 mr-1"
+          >
+            اسم العميل
           </label>
-          <div className="relative">
-            <FiTag className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" size={16} />
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (error) setError("");
-              }}
-              placeholder=""
-              disabled
-              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium rounded-lg focus:bg-white focus:border-[#a53860] focus:ring-4 focus:ring-[#a53860]/10 block w-full pr-10 pl-4 py-3 placeholder:text-slate-400 focus:outline-none transition-all"
-            />
-          </div>
+
+         <Select
+  options={options}
+  value={
+    options.find((option) => option.value === selectedUser) || null
+  }
+  placeholder="برجاء اختيار اسم العميل"
+  className="font-semibold"
+  classNamePrefix="custom-select"
+  onChange={(selectedOption) => {
+    setSelectedUser(selectedOption?.value || "");
+    setName(selectedOption?.label?.split(" - ")[0]?.trim() || "");
+  }}
+/>
         </div>
 
         {/* Price Field */}

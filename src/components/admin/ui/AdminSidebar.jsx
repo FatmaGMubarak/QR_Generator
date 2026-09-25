@@ -69,7 +69,7 @@ const links = [
 
 export default function AdminSidebar() {
   // const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { isSidebarOpen, setIsSidebarOpen } = useUserOptions();
+  const { isSidebarOpen, setIsSidebarOpen, handleCancel } = useUserOptions();
 
   const ssUser = JSON.parse(localStorage.getItem("user"));
 
@@ -93,6 +93,11 @@ export default function AdminSidebar() {
       const response = await dispatch(logOut()).unwrap();
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("profile");
+      sessionStorage.removeItem("QR Profile");
+      sessionStorage.removeItem("profileCreated");
+      sessionStorage.removeItem("QR Profile Edited");
+      handleCancel();
       notify(response.message, "success");
       navigate("/login");
     } catch (error) {

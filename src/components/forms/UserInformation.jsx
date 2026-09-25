@@ -113,7 +113,7 @@ const options = categories?.map((cat) => ({
     if(role === 'admin'){
       dispatch(fetchUsers());
     }
-  }, [])
+  }, [dispatch, role])
 
   useEffect(() => {
     sessionStorage.setItem("profileCreated", JSON.stringify(profile));
@@ -196,7 +196,7 @@ const options = categories?.map((cat) => ({
     try {
       const profileData = new FormData();
       profileData.append("name", values.name);
-      profileData.append("activity_id", values.activity?.value);
+      profileData.append("activity_id", profile?.activity?.value);
       profileData.append("about_us", values.bio);
       profileData.append("email", values.email);
       profileData.append("address", values.address);
@@ -204,7 +204,7 @@ const options = categories?.map((cat) => ({
       profileData.append("facebook", values.facebookURL);
       profileData.append("instagram", values.instagramURL);
       profileData.append("tiktok", values.tiktokURL);
-      profileData.append("whatsapp", values.whatsappNumber);
+      profileData.append("whatsapp", profile?.whatsappNumber);
 
       if (values.logoImageFile instanceof File) {
         profileData.append("logo", values.logoImageFile);
@@ -363,28 +363,26 @@ const options = categories?.map((cat) => ({
 
         return value.size <= 5 * 1024 * 1024;
       }),
-    phoneNumber: Yup.string().matches(
-      /^(?:0|20|\+20)1[0125][0-9]{8}$/,
-      "برجاء ادخال رقم هاتف مصرى صحيح",
-    ),
+    phoneNumber: Yup.string()
+  .matches(
+    /^(?:0|20|\+20)(?:1[0125][0-9]{8}|[2-9][0-9]{7,8})$/,
+    "برجاء إدخال رقم هاتف مصري صحيح"
+  ),
     facebookURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة فيسبوك صحيحة.")
-      .matches(
-        /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/,
-        "برجاء ادخال عنوان صفحة فيسبوك صحيحة.",
-      ),
+  .matches(
+    /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/i,
+    "برجاء إدخال عنوان صفحة فيسبوك صحيحة."
+  ),
     instagramURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة انستجرام صحيحة.")
-      .matches(
-        /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/,
-        "برجاء ادخال عنوان صفحة انستجرام صحيحة.",
-      ),
-    tiktokURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة تيك توك صحيحة.")
-      .matches(
-        /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/,
-        "برجاء ادخال عنوان صفحة تيك توك صحيحة.",
-      ),
+  .matches(
+    /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/i,
+    "برجاء إدخال عنوان صفحة انستجرام صحيحة."
+  ),
+   tiktokURL: Yup.string()
+  .matches(
+    /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/i,
+    "برجاء إدخال عنوان صفحة تيك توك صحيحة."
+  ),
     whatsappNumber: Yup.string().matches(
       /^(?:\+?20|0)?1[0125][0-9]{8}$/,
       "برجاء ادخال رقم واتساب مصري صحيح (مثال: 01096890544 أو 201096890544)",

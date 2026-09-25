@@ -105,7 +105,7 @@ export default function AdminCreateSubscription() {
 
       navigate("/admin");
     } catch (err) {
-      notify(err.message[0]?.profile_limit[0], "error");
+      notify(err.message, "error");
     }
   };
 

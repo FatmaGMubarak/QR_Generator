@@ -59,58 +59,58 @@ export default function AdminHome() {
   }, [dispatch]);
 
 
-  useEffect(() => {
-    sessionStorage.removeItem("profileCreated");
-    sessionStorage.removeItem("QR Profile");
-    setProfile({
-      name: "",
-      userName: "",
-      bio: "",
-      email: "",
-      address: "",
-      menu: null,
-      phoneNumber: "",
-      facebookURL: "",
-      instagramURL: "",
-      tiktokURL: "",
-      whatsappNumber: "",
-      whatsappURL: "",
-      logoURL: "",
-      coverURL: "",
-      logoURLPublicId: "",
-      logoURLDeleteToken: "",
-      coverURLPublicId: "",
-      coverURLDeleteToken: "",
-    });
-    setQrProfile({
-      name: "",
-      userName: "",
-      bio: "",
-      email: "",
-      address: "",
-      menu: null,
-      phoneNumber: "",
-      facebookURL: "",
-      instagramURL: "",
-      tiktokURL: "",
-      whatsappNumber: "",
-      whatsappURL: "",
-      logoURL: "",
-      coverURL: "",
-    });
-    setName("");
-    setBio("");
-    setEmail("");
-    setAddress("");
-    setMenu(null);
-    setPhoneNumber("");
-    setFacebookURL("");
-    setInstagramURL("");
-    setTiktokURL("");
-    setWhatsappNumber("");
-    setWhatsappURL("");
-    setQrValue("");
-  }, []);
+  // useEffect(() => {
+  //   sessionStorage.removeItem("profileCreated");
+  //   sessionStorage.removeItem("QR Profile");
+  //   setProfile({
+  //     name: "",
+  //     userName: "",
+  //     bio: "",
+  //     email: "",
+  //     address: "",
+  //     menu: null,
+  //     phoneNumber: "",
+  //     facebookURL: "",
+  //     instagramURL: "",
+  //     tiktokURL: "",
+  //     whatsappNumber: "",
+  //     whatsappURL: "",
+  //     logoURL: "",
+  //     coverURL: "",
+  //     logoURLPublicId: "",
+  //     logoURLDeleteToken: "",
+  //     coverURLPublicId: "",
+  //     coverURLDeleteToken: "",
+  //   });
+  //   setQrProfile({
+  //     name: "",
+  //     userName: "",
+  //     bio: "",
+  //     email: "",
+  //     address: "",
+  //     menu: null,
+  //     phoneNumber: "",
+  //     facebookURL: "",
+  //     instagramURL: "",
+  //     tiktokURL: "",
+  //     whatsappNumber: "",
+  //     whatsappURL: "",
+  //     logoURL: "",
+  //     coverURL: "",
+  //   });
+  //   setName("");
+  //   setBio("");
+  //   setEmail("");
+  //   setAddress("");
+  //   setMenu(null);
+  //   setPhoneNumber("");
+  //   setFacebookURL("");
+  //   setInstagramURL("");
+  //   setTiktokURL("");
+  //   setWhatsappNumber("");
+  //   setWhatsappURL("");
+  //   setQrValue("");
+  // }, []);
 
   const normalizeSearchText = (value) => {
     return String(value || "")

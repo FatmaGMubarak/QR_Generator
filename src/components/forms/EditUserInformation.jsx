@@ -101,7 +101,7 @@ export default function EditUserInformation() {
     })) || [];
 
 const options = categories?.map((cat) => ({
-    value: cat?.name,
+    value: cat?.id,
     label: cat?.name,
   })) || [];
 
@@ -235,13 +235,14 @@ const submitProfilePage = async (values) => {
     profileData.append("name", values.name);
     profileData.append("activity_id", values.activity?.value);
     profileData.append("about_us", values.bio);
+    profileData.append("menu", values.menu);
     profileData.append("email", values.email);
     profileData.append("address", values.address);
     profileData.append("phone", values.phoneNumber);
     profileData.append("facebook", values.facebookURL);
     profileData.append("instagram", values.instagramURL);
     profileData.append("tiktok", values.tiktokURL);
-    profileData.append("whatsapp", values.whatsappNumber);
+    profileData.append("whatsapp", values.whatsappNumber.slice(14));
 
     if (values.logoImageFile instanceof File) {
       profileData.append("logo", values.logoImageFile);
@@ -399,38 +400,43 @@ const submitProfilePage = async (values) => {
 
         return value.size <= 5 * 1024 * 1024;
       }),
-    phoneNumber: Yup.string().matches(
-      /^(?:0|20|\+20)1[0125][0-9]{8}$/,
-      "برجاء ادخال رقم هاتف مصرى صحيح",
-    ),
-    facebookURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة فيسبوك صحيحة.")
+    phoneNumber: Yup.string()
       .matches(
-        /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/,
-        "برجاء ادخال عنوان صفحة فيسبوك صحيحة.",
+        /^(?:0|20|\+20)(?:1[0125][0-9]{8}|[2-9][0-9]{7,8})$/,
+        "برجاء إدخال رقم هاتف مصري صحيح"
       ),
-    instagramURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة انستجرام صحيحة.")
+        facebookURL: Yup.string()
       .matches(
-        /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/,
-        "برجاء ادخال عنوان صفحة انستجرام صحيحة.",
+        /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/i,
+        "برجاء إدخال عنوان صفحة فيسبوك صحيحة."
       ),
-    tiktokURL: Yup.string()
-      .url("برجاء ادخال عنوان صفحة تيك توك صحيحة.")
+        instagramURL: Yup.string()
       .matches(
-        /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/,
-        "برجاء ادخال عنوان صفحة تيك توك صحيحة.",
+        /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/i,
+        "برجاء إدخال عنوان صفحة انستجرام صحيحة."
       ),
-    whatsappNumber: Yup.string().matches(
-      /^(?:\+?20|0)?1[0125][0-9]{8}$/,
-      "برجاء ادخال رقم واتساب مصري صحيح (مثال: 01096890544 أو 201096890544)",
-    ),
+       tiktokURL: Yup.string()
+      .matches(
+        /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/i,
+        "برجاء إدخال عنوان صفحة تيك توك صحيحة."
+      ),
+        whatsappNumber: Yup.string().matches(
+          /^(?:\+?20|0)?1[0125][0-9]{8}$/,
+          "برجاء ادخال رقم واتساب مصري صحيح (مثال: 01096890544 أو 201096890544)",
+        ),
   });
 
+  const activityOption =
+  categories?.find((cat) => cat.id === profile?.activity_id);
   const formik = useFormik({
     initialValues: {
       name: profile?.name || "",
-      activity: profile?.activity_id || "",
+       activity: activityOption
+      ? {
+          value: activityOption.id,
+          label: activityOption.name,
+        }
+      : null,
       bio: profile?.about_us || "",
       email: profile?.email || "",
       address: profile?.address || "",
@@ -439,7 +445,7 @@ const submitProfilePage = async (values) => {
       facebookURL: profile?.facebook || "",
       instagramURL: profile?.instagram || "",
       tiktokURL: profile?.tiktok || "",
-      //whatsappNumber: profile?.whatsapp || "",
+      whatsappNumber: profile?.whatsapp || "",
       whatsappURL: profile?.whatsapp || "",
       logoURL: profile?.logo || "",
       coverURL: profile?.cover || "",
@@ -893,7 +899,7 @@ const submitProfilePage = async (values) => {
   type="text"
                   id="activity"
                   name="activity"
-                  value={profile?.activity || activity}
+                  value={ activity}
  placeholder="اكتب نوع المنشأة هنا"
                   required
   className="bg-[#F8FAFC] custom-select__control border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
@@ -1409,7 +1415,7 @@ const submitProfilePage = async (values) => {
                   type="text"
                   id="whatappNumber"
                   name="whatappNumber"
-                  value={ whatsappNumber}
+                  value={whatsappNumber}
                   onBlur={(e) => {
                     formik.handleBlur(e);
                     if (!formik.errors.whatsappNumber) {
