@@ -1385,27 +1385,49 @@ const options = categories?.map((cat) => ({
                     }
                   }}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    setWhatsappNumber(value);
+  const value = e.target.value;
 
-                    let cleanNumber = value
-                      .replace(/\s+/g, "")
-                      .replace("+", "");
-                    if (cleanNumber.startsWith("01")) {
-                      cleanNumber = "20" + cleanNumber.substring(1);
-                    } else if (cleanNumber.startsWith("1")) {
-                      cleanNumber = "20" + cleanNumber;
-                    }
+  setWhatsappNumber(value);
+  formik.setFieldValue("whatsappNumber", value);
 
-                    const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
-                    setWhatsappURL(generatedWhatsAppURL);
+  // If WhatsApp number is empty, clear everything
+  if (!value.trim()) {
+    setWhatsappURL("");
+    setProfile((prev) => ({
+      ...prev,
+      whatsappNumber: "",
+      whatsappURL: "",
+    }));
 
-                    setProfile((prev) => ({
-                      ...prev,
-                      whatsappURL: generatedWhatsAppURL,
-                      whatsappNumber: value,
-                    }));
-                  }}
+    setQrProfile((prev) => ({
+      ...prev,
+      whatsappNumber: "",
+      whatsappURL: "",
+    }));
+
+    return;
+  }
+
+  let cleanNumber = value
+    .replace(/\s+/g, "")
+    .replace("+", "");
+
+  if (cleanNumber.startsWith("01")) {
+    cleanNumber = "20" + cleanNumber.substring(1);
+  } else if (cleanNumber.startsWith("1")) {
+    cleanNumber = "20" + cleanNumber;
+  }
+
+  const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
+
+  setWhatsappURL(generatedWhatsAppURL);
+
+  setProfile((prev) => ({
+    ...prev,
+    whatsappNumber: value,
+    whatsappURL: generatedWhatsAppURL,
+  }));
+}}
                   className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238, 38, 119, 0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300 text-right"
                   placeholder="201234567890"
                 />

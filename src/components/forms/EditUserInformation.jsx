@@ -135,25 +135,45 @@ const options = categories?.map((cat) => ({
   }, [profile, name, bio, email, address, menu, phoneNumber, facebookURL, instagramURL, tiktokURL, whatsappURL, logoURL, coverURL]);
 
   useEffect(() => {
-    setName(profile?.name || "");
-    setClientName(profile?.clientName || "");
-    
-    setActivity({value:profileActivity?.name || "", label: profileActivity?.name || ""});
-    setBio(profile?.about_us || "");
-      setEmail(profile?.email || "");
-      setAddress(profile?.address || "");
-      setMenu(profile?.menu || null);
-      setPhoneNumber(profile?.phone || "");
-      setFacebookURL(profile?.facebook || "");
-      setInstagramURL(profile?.instagram || "");
-      setTiktokURL(profile?.tiktok || "");
-      setWhatsappNumber(profile?.whatsapp.slice(15) || "");
-      setWhatsappURL(profile?.whatsapp || "");
-      setLogoURL(profile?.logo || null);
-      setCoverURL(profile?.cover || null);
-      // logoImageFile: null,
-      // coverImageFile: null,
-  }, [profile]);
+  if (!profile) return;
+
+  setName(profile?.name || "");
+  setClientName(profile?.clientName || "");
+
+  setActivity(
+    profileActivity
+      ? {
+          value: profileActivity.id,
+          label: profileActivity.name,
+        }
+      : null
+  );
+
+  setBio(profile?.about_us || "");
+  setEmail(profile?.email || "");
+  setAddress(profile?.address || "");
+  setMenu(profile?.menu || null);
+  setPhoneNumber(profile?.phone || "");
+
+  setFacebookURL(profile?.facebook || "");
+  setInstagramURL(profile?.instagram || "");
+  setTiktokURL(profile?.tiktok || "");
+
+  const whatsappURL = profile?.whatsapp || "";
+
+const whatsappNumber =
+  !whatsappURL || whatsappURL === "https://wa.me/+2"
+    ? ""
+    : whatsappURL.replace("https://wa.me/+2", "");
+
+setWhatsappNumber(whatsappNumber);
+setWhatsappURL(
+  whatsappURL === "https://wa.me/+2" ? "" : whatsappURL
+);
+
+  setLogoURL(profile?.logo || null);
+  setCoverURL(profile?.cover || null);
+}, [profile, profileActivity]);
 
   useEffect(() => {
     sessionStorage.setItem("QR Profile Edited", JSON.stringify(editQrProfile));
@@ -266,7 +286,11 @@ const submitProfilePage = async (values) => {
    
 
     notify(response.message, "success");
-    //navigate("/user");
+    if(role === "admin"){
+      navigate("/admin");
+    }else if(role === "user"){
+      navigate("/user")
+    }
 
     // if (!isEditMode) {
     //   handleCancel(); 
@@ -445,8 +469,10 @@ const submitProfilePage = async (values) => {
       facebookURL: profile?.facebook || "",
       instagramURL: profile?.instagram || "",
       tiktokURL: profile?.tiktok || "",
-      whatsappNumber: profile?.whatsapp || "",
-      whatsappURL: profile?.whatsapp || "",
+      whatsappNumber: profile?.whatsapp
+  ? profile.whatsapp.replace("https://wa.me/", "")
+  : "",
+whatsappURL: profile?.whatsapp || "",
       logoURL: profile?.logo || "",
       coverURL: profile?.cover || "",
       logoImageFile: null,
