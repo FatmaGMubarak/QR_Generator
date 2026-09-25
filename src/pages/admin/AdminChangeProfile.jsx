@@ -233,21 +233,21 @@ export default function AdminChangeProfile() {
 </div>
                     )}
 
-                    {storedProfile?.menu && (
+                    {/* {storedProfile?.menu && (
                         <div className=" flex gap-x-1 justify-center items-center text-red-900  transition-transform hover:-translate-y-1 hover:scale-105 ease-in-out px-3 py-1.5 rounded-lg">
-                          
+                           */}
                           {/* <img src={facebookLogo} alt="" className="w-9 h-9"/> */}
-                          <div className="flex justify-center items-center lg:gap-x-1">
+                          {/* <div className="flex justify-center items-center lg:gap-x-1">
                             <a
                               href={storedProfile?.menu}
                               className="font-bold lg:text-sm transition-all "
                             >
-                             عرض القائمة
+                             عرض المنيو
                             </a>
                             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
                           </div>
                         </div>
-                      )}
+                      )} */}
                     <div className="grid grid-cols-1 px-3 pb-4 gap-y-5 lg:gap-y-2">
                       {storedProfile?.facebook && (
                         <div className=" bg-[#1877F2] flex gap-x-1 justify-center items-center text-white  transition-transform hover:-translate-y-1 hover:scale-105 ease-in-out px-3 py-1.5 rounded-lg">

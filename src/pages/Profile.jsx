@@ -225,7 +225,7 @@ export default function Profile() {
             </div>
           )}
 
-          {displayMenu && (
+          {/* {displayMenu && (
             <a
               href={displayMenu}
               className={`mt-5 w-full max-w-sm flex items-center justify-center gap-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-[#a53860] to-[#880d1e] text-white font-bold text-sm shadow-lg shadow-[#a53860]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl ${
@@ -233,10 +233,10 @@ export default function Profile() {
               }`}
             >
               <MenuSquare className="text-lg" />
-              عرض القائمة
+              عرض المنيو
               <MdKeyboardDoubleArrowLeft className="text-xl" />
             </a>
-          )}
+          )} */}
 
           {socialLinks.length > 0 && (
             <div

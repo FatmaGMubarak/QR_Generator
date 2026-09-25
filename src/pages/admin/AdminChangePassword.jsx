@@ -170,7 +170,7 @@ export default function AdminChangePassword() {
                     ) || null
                   }
                   placeholder="برجاء اختيار اسم العميل"
-                  className="font-semibold"
+                  className="text-[#1E293B] font-medium placeholder:text-[#94A3B8] "
                   classNamePrefix="custom-select"
                   isClearable
                   onChange={(selectedOption) => {

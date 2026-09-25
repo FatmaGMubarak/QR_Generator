@@ -402,7 +402,7 @@ navigate(`/user`);
                 </div>
 
 
-                <a
+                {/* <a
                   href={profile.menu}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -419,9 +419,9 @@ navigate(`/user`);
                     transition-colors duration-200
                   "
                 >
-                  عرض القائمة
+                  عرض المنيو
                   <ExternalLink size={16} />
-                </a>
+                </a> */}
 
               </div>
             )}
