@@ -38,7 +38,7 @@ export default function AdminDisplaySubscription() {
     }, [dispatch]);
   
     const options =
-      users?.slice(0, 5)?.map((user) => ({
+      users?.map((user) => ({
         value: user?.id,
         label: `${user?.name} - ${user?.phone}`,
       })) || [];
