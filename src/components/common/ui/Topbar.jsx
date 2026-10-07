@@ -1,11 +1,15 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { House } from "lucide-react";
 
 import { useUserOptions } from "../../../context/UserOptionsContext";
 
 export default function Topbar() {
   const { setMode } = useUserOptions();
+
+  const location = useLocation();
+
+  const isLoginPage = location?.pathname?.includes("/login");
 
   const navigate = useNavigate();
 
@@ -16,7 +20,7 @@ export default function Topbar() {
         top-0
         end-0
         z-50
-        bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]
+        bg-gradient-to-r ${isLoginPage ? 'from-[#ffafcc] via-[#ff8fa3] ' : 'from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]'}
         w-full
         border-b border-[#e5e7eb]
       `}
@@ -108,7 +112,8 @@ export default function Topbar() {
           </span>
         </button>
 
-        <div className="flex items-center gap-2">
+        {!isLoginPage && (
+          <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -167,9 +172,10 @@ export default function Topbar() {
               active:scale-95
             "
           >
-            انشاء صفحة
+            انشاء حساب
           </button>
         </div>
+        )}
       </div>
     </nav>
   );

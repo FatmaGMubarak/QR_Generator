@@ -33,6 +33,7 @@ import AdminChangePassword from "./pages/admin/AdminChangePassword";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminDisplaySubscription from "./pages/admin/AdminDisplaySubscription";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
+import UserDashboard from "./pages/user/UserDashboard";
 
 export default function App() {
   const user = useSelector((state)=>state?.auth?.user);
@@ -104,6 +105,11 @@ export default function App() {
               <Route
                 index
                 element={<UserHome />}
+              />
+
+              <Route
+                path="dashboard"
+                element={<UserDashboard />}
               />
 
               <Route

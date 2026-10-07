@@ -8,6 +8,7 @@ import { createSubscription, renewSubscription, fetchSubscriptions, updateSubscr
 import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
 import { fetchUsers } from "../../store/reducers/auth/authSlice";
 import Select from "react-select";
+import { HandCoins } from "lucide-react";
 
 
 export default function AdminDisplaySubscription() {
@@ -19,6 +20,7 @@ export default function AdminDisplaySubscription() {
 
   const [name, setName] = useState(selectedSubscription?.name || "");
   const [selectedUser, setSelectedUser] = useState(selectedSubscription?.user_id);
+  const [profileLimit, setProfileLimit] = useState(selectedSubscription?.profile_limit || 1);
   const [price, setPrice] = useState(selectedSubscription?.price || "");
   const [active, setActive] = useState(selectedSubscription?.status === "active");
   const [premium, setPremium] = useState(Boolean(selectedSubscription?.premium));
@@ -168,6 +170,43 @@ useEffect(() => {
     setName(selectedOption?.label?.split(" - ")[0]?.trim() || "");
   }}
 />
+        </div>
+
+         {/* Profile Limit Field */}
+
+        <div className="w-full">
+          <label
+            htmlFor="price"
+            className="block text-sm font-semibold text-slate-600 mb-2"
+          >
+            عدد الصفحات المسموحة
+          </label>
+
+          <div className="relative">
+            <HandCoins
+              className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400"
+              size={16}
+            />
+
+            <input
+              id="profileLimit"
+              type="number"
+              min="1"
+              value={profileLimit}
+              onBlur={(e) => {
+                if (e.target.value === "") {
+                  setProfileLimit(1);
+                }
+              }}
+              onChange={(e) => {
+                setProfileLimit(e.target.value);
+
+                if (error) setError("");
+              }}
+              placeholder="اكتب عدد الصفحات المسموح بها"
+              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium rounded-lg focus:bg-white focus:border-[#a53860] focus:ring-4 focus:ring-[#a53860]/10 block w-full pr-10 pl-4 py-3 placeholder:text-slate-400 focus:outline-none transition-all"
+            />
+          </div>
         </div>
 
         {/* Price Field */}

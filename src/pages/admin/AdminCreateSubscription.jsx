@@ -35,13 +35,13 @@ export default function AdminCreateSubscription() {
 
   const [selectedUser, setSelectedUser] = useState("");
 
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(0);
 
   const [active, setActive] = useState(true);
 
-  const [premium, setPremium] = useState(true);
+  const [premium, setPremium] = useState(false);
 
-  const [free, setFree] = useState(false);
+  const [free, setFree] = useState(true);
 
   const [billingCycle, setBillingCycle] = useState("monthly");
 
@@ -227,8 +227,22 @@ export default function AdminCreateSubscription() {
               value={price}
               onChange={(e) => {
                 setPrice(e.target.value);
-
+                if(e.target.value == 0){
+                  setPremium(false);
+                  setFree(true)
+                }
+                if(e.target.value > 0) {
+                  setFree(false)
+                }
                 if (error) setError("");
+              }}
+              onBlur={(e)=>{
+                const value = e.target.value;
+                if(value === ""){
+                  setPrice(0);
+                  setPremium(false);
+                  setFree(true);
+                }
               }}
               placeholder="اكتب السعر"
               className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium rounded-lg focus:bg-white focus:border-[#a53860] focus:ring-4 focus:ring-[#a53860]/10 block w-full pr-10 pl-4 py-3 placeholder:text-slate-400 focus:outline-none transition-all"
@@ -289,7 +303,7 @@ export default function AdminCreateSubscription() {
               </p>
             </div>
 
-            <Toggle value={premium} onChange={setPremium} />
+            <Toggle value={premium} onChange={setPremium} dependentant={price} label={"premium"}/>
           </div>
 
           <div className="flex items-center justify-between px-4 py-3.5">
@@ -301,7 +315,7 @@ export default function AdminCreateSubscription() {
               </p>
             </div>
 
-            <Toggle value={free} onChange={setFree} />
+            <Toggle value={free} onChange={setFree} dependentant={price} label={"free"}/>
           </div>
         </div>
 

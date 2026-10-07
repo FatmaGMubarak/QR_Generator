@@ -1,13 +1,17 @@
 import React from "react";
 
-export default function Toggle({ value, onChange }) {
+export default function Toggle({ value, onChange, dependentant, label }) {
   return (
     <label className="inline-flex items-center cursor-pointer">
       <input
         type="checkbox"
         className="sr-only peer"
         checked={value}
-        onChange={(e) => onChange(e.target.checked)}
+        disabled={(dependentant == 0 && label === "premium") || (dependentant>0 && label === 'free') }
+        onChange={(e) => {
+          
+          onChange(e.target.checked)
+        }}
       />
 
       <div

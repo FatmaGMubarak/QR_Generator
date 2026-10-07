@@ -12,7 +12,7 @@ import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
 import { Link } from "react-router-dom";
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 
-export default function UserHome() {
+export default function UserDashboard() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const profiles = useSelector((state) => state?.profile?.profiles) || [];
@@ -138,17 +138,18 @@ export default function UserHome() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] p-4 sm:p-5">
-      <div className="w-full h-full mt-[7%]">
+      {/* <div className="w-full h-full mt-[7%]">
         <CategorySlideshow />
-      </div>
-      <div className="w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[3%]">
+      </div> */}
+      <div className="w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[7%]">
+        <h1 className="text-lg sm:text-2xl font-bold mb-2 mt-1">المنشآت الشخصية</h1>
         <Search onSearch={setSearchQuery} />
         <CategoriesListing
                        onCategorySelect={setSelectedCategory}
                      />
       </div>
 
-      <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 lg:pr-5'>
+      {/* <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 lg:pr-5'>
               <div className='w-full flex justify-between items-center'>
                 <h1 className='text-lg sm:text-xl font-bold'>كل المنشآت</h1>
                 {filteredHomeProfiles?.length > 4 && <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
@@ -169,11 +170,11 @@ export default function UserHome() {
                   <p className='text-gray-600 font-semibold text-lg'>لا توجد بيانات للعرض</p>
                 </div>
               )}
-            </div>
-      {/* <div className="w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]">
+            </div> */}
+      <div className="w-full flex flex-col gap-y-4 mt-6 sm:mt-1 md:mt-[2%]">
         <div className="w-full flex justify-between items-center">
-          <h1 className="text-lg sm:text-xl font-bold">المنشآت الشخصية</h1>
-          {filteredProfiles?.length > 4 && (
+          
+          {filteredProfiles?.length > 8 && (
             <div className="flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24">
               <Link to={"/user/display-all-profiles"}>عرض المزيد </Link>
               <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
@@ -182,7 +183,7 @@ export default function UserHome() {
         </div>
         {filteredProfiles?.length > 0 ? (
           <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2">
-            {filteredProfiles?.slice(0, 4)?.map((profile) => {
+            {filteredProfiles?.slice(0, 8)?.map((profile) => {
               return (
                 <ProfileCard
                   key={profile?.id}
@@ -202,7 +203,7 @@ export default function UserHome() {
             </p>
           </div>
         )}
-      </div> */}
+      </div>
     </div>
   );
 }

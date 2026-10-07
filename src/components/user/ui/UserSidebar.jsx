@@ -8,6 +8,7 @@ import {
   Shield,
   User,
   QrCode,
+  Houses,
   Menu,
   SquareUserRound,
   ChevronLeft
@@ -20,8 +21,9 @@ import { logOut } from "../../../store/reducers/auth/authSlice";
 import notify from "../../../hooks/Notifications";
 
 const links = [
-  { to: "/user", label: "لوحة التحكم", icon: QrCode, end: true },
-  { to: "/user/create-profile", label: "انشاء صفحة شخصية", icon: SquareUserRound , end: true },
+  { to: "/user", label: "الصفحة الرئيسية", icon: Houses, end: true },
+  { to: "/user/dashboard", label: "لوحة التحكم", icon: QrCode , end: true },
+  { to: "/user/create-profile", label: "انشاء منشأة شخصية", icon: SquareUserRound , end: true },
   //{ to: "/admin/users", label: "المستخدمون", icon: Users },
   //{ to: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];

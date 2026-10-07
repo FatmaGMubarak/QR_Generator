@@ -19,6 +19,7 @@ import * as Yup from "yup";
 import { login, register } from "../../store/reducers/auth/authSlice";
 import { useUserOptions } from "../../context/UserOptionsContext";
 import notify from "../../hooks/Notifications";
+import Topbar from "../../components/common/ui/Topbar";
 
 const FloatingField = forwardRef(({
   icon: Icon,
@@ -210,8 +211,12 @@ useEffect(() => {
   }
 
   return (
+
+    
     
     <div className="w-full min-h-screen md:min-h-screen lg:h-screen flex items-center bg-gradient-to-br from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] overflow-hidden">
+      
+     <Topbar />
       <div
   className="
     w-full
@@ -220,10 +225,13 @@ useEffect(() => {
     grid-cols-1
     lg:grid-cols-[0.85fr_1.15fr]
     overflow-hidden
-    border border-[#dce9e1]
+    
     shadow-[0_25px_70px_-20px_rgba(57,122,85,0.25)]
+    mt-10
   "
 >
+
+   
         <aside className="relative flex flex-col justify-between overflow-hidden">
           <div className="absolute w-full h-[340px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.45),transparent_70%)] blur-[10px] -top-20 -left-24" />
             
@@ -242,7 +250,7 @@ useEffect(() => {
         
         "
       >
-          <div className={`border border-gray-100 rounded-xl ${isLogin ? 'py-24' : 'py-8'} w-full shadow-xl bg-white`}>
+          <div className={`border border-gray-100 rounded-xl ${isLogin ? 'py-16' : 'py-8'} w-full shadow-xl bg-white`}>
             <div
             className="
               flex

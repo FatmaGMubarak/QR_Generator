@@ -219,7 +219,7 @@ const options = categories?.map((cat) => ({
       const response = await dispatch(createProfile(profileData)).unwrap();
 
       if (response) {
-        const url = `https://linkaty.online/${profile.userName}`;
+        const url = `https://linkaty.online/${response?.slug}`;
         setQrValue(url);
         setProfile((prev) => ({
           ...prev,

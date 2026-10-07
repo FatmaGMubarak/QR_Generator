@@ -121,7 +121,7 @@ export default function AdminHome() {
                   </div>
       <div className='w-full flex flex-col gap-y-4 mt-6 sm:mt-4 md:mt-[5%]'>
         <div className='w-full flex justify-between items-center'>
-          <h1 className='text-lg sm:text-xl font-bold'>الصفحات الشخصية</h1>
+          <h1 className='text-lg sm:text-xl font-bold'>المنشآت الشخصية</h1>
          {filteredProfiles?.length > 4 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
             <Link to={"/admin/display-all-profiles"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
