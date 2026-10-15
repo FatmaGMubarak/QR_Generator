@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import cover from "../assets/pietro-de-grandi-T7K4aEPoGGk-unsplash.jpg";
 import avatar from "../assets/avatar.png";
 import { FaFacebook } from "react-icons/fa";
@@ -18,12 +18,60 @@ import { FaPhone } from "react-icons/fa";
 import { MdImageNotSupported } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import {fetchProfileById} from '../store/reducers/profileSlice.js'
-import { HomeIcon, Mail, Phone, ExternalLink, MenuSquare } from "lucide-react";
+import { HomeIcon, Mail, Phone, ExternalLink, MenuSquare, SearchX } from "lucide-react";
 
+function ProfileNotFound({ slug }) {
+  return (
+    <div
+      dir="rtl"
+      className="w-full min-h-screen bg-gradient-to-br from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-10 sm:p-8 flex justify-center items-center overflow-hidden"
+    >
+      <div className="w-full max-w-lg bg-white/90 backdrop-blur-xl rounded-[28px] shadow-2xl shadow-black/10 border border-white/60 px-6 sm:px-10 py-12 flex flex-col items-center text-center">
+        <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-[#880d1e]/10 to-[#2f6647]/10 ring-4 ring-[#4c956c]/15">
+          <SearchX className="w-11 h-11 text-[#880d1e]" strokeWidth={1.75} />
+        </div>
+
+        <p className="mt-6 text-7xl sm:text-8xl font-extrabold leading-none tracking-tight bg-gradient-to-r from-[#880d1e] to-[#2f6647] bg-clip-text text-transparent select-none">
+          404
+        </p>
+
+        <h1 className="mt-4 text-2xl sm:text-3xl font-extrabold text-[#1e293b]">
+          الصفحة غير موجودة
+        </h1>
+
+        <p className="mt-3 text-[15px] font-medium text-[#64748B] leading-relaxed max-w-sm">
+          عذرًا، لم نتمكن من العثور على الصفحة التي تبحث عنها. ربما تم تغيير
+          الرابط أو حذف الصفحة، أو أن الرابط غير صحيح.
+        </p>
+
+        {slug && (
+          <div
+            dir="ltr"
+            className="mt-5 max-w-full px-4 py-2 rounded-xl bg-[#F8FAFC] border border-gray-300 text-sm font-medium text-[#475569] truncate"
+          >
+            /{slug}
+          </div>
+        )}
+
+        <div className="mt-8 w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#a53860] to-[#880d1e] text-white font-bold text-sm shadow-lg shadow-[#a53860]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
+          >
+            العودة للصفحة الرئيسية
+            <MdKeyboardDoubleArrowLeft className="text-xl" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const [profileNoToken, setProfileNoToken] = useState(null);
   const [fbLoading, setFbLoading] = useState(false);
+  // "loading" | "found" | "notFound"
+  const [fetchStatus, setFetchStatus] = useState("loading");
   const token = useSelector((state) => state?.auth?.token);
   const authInitialized = useSelector((state) => state?.auth?.initialized);
   const profile = useSelector((state) => state?.profile?.profile);
@@ -34,15 +82,29 @@ export default function Profile() {
   useEffect(() => {
     if (!slug) return;
 
+    let cancelled = false;
+    setFetchStatus("loading");
+
     dispatch(fetchProfileById(slug))
       .unwrap()
+      .then((result) => {
+        if (cancelled) return;
+        // An empty response also means the slug doesn't match any profile
+        setFetchStatus(result ? "found" : "notFound");
+      })
       .catch((err) => {
+        if (cancelled) return;
         console.warn("Backend fetch failed, falling back to Firebase:", err);
+        setFetchStatus("notFound");
       });
 
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch, slug]);
 
-  const loading = token ? backendLoading : fbLoading;
+  const loading =
+    fetchStatus === "loading" || (token ? backendLoading : fbLoading);
 
   const displayName = profile?.name ?? profileNoToken?.name;
   const displayCover = profile?.cover ?? profileNoToken?.coverURL;
@@ -110,6 +172,11 @@ export default function Profile() {
       text: displayAddress,
     },
   ].filter(Boolean);
+
+  // Invalid slug: nothing came back from the backend and no fallback data exists
+  if (!loading && fetchStatus === "notFound" && !profileNoToken) {
+    return <ProfileNotFound slug={slug} />;
+  }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-10 sm:p-8 flex justify-center items-center overflow-hidden">

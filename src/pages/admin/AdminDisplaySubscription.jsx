@@ -81,7 +81,7 @@ useEffect(() => {
 
       const response = await dispatch(updateSubscription({id: id, updatedData: subscriptionData})).unwrap();
       notify(response.message, "success");
-      navigate("/admin/subscriptions");
+      navigate("/subscriptions");
     } catch (err) {
       notify(err?.message || "حدث خطأ ما", "error");
     }
@@ -104,8 +104,11 @@ useEffect(() => {
       renewData.append("type", billingCycle);
        const response = await dispatch(
       renewSubscription({ id: id, renewData: renewData })
+      
     ).unwrap();
+     navigate("/subscriptions")
       notify(response.message, "success");
+     
     }
     catch(err){
       notify(err.message, "error");

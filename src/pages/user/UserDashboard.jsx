@@ -23,7 +23,7 @@ export default function UserDashboard() {
   const dispatch = useDispatch();
 
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=>state.auth.role);
 
   useEffect(() => {
     dispatch(fetchProfiles());
@@ -176,7 +176,7 @@ export default function UserDashboard() {
           
           {filteredProfiles?.length > 8 && (
             <div className="flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24">
-              <Link to={"/user/display-all-profiles"}>عرض المزيد </Link>
+              <Link to={"/display-all-profiles"}>عرض المزيد </Link>
               <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
             </div>
           )}
@@ -190,7 +190,6 @@ export default function UserDashboard() {
                   logoImg={profile?.logo}
                   name={profile?.name}
                   slug={profile?.slug}
-                  isAdmin={isAdmin}
                   activity={profile?.activity_id}
                 />
               );

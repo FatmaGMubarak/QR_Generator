@@ -80,6 +80,42 @@ export const diactivateSubscription = createAsyncThunk(
     }
 )
 
+export const activateSubscription = createAsyncThunk(
+    "/subscription/activateSubscription",
+    async (id,{rejectWithValue, getState})=>{
+        try{
+            const token = getState().auth.token;
+            const config = {
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            }
+            const response = await api.post(`/api/subscriptions/${id}/active`, config)
+            return response.data
+        }catch(error){
+            return rejectWithValue(error.response?.data || error.message)
+        }
+    }
+)
+
+export const deleteSubscription = createAsyncThunk(
+    "/subscription/deleteSubscription",
+    async (id,{rejectWithValue, getState})=>{
+        try{
+            const token = getState().auth.token;
+            const config = {
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            }
+            const response = await api.delete(`/api/subscriptions/${id}`, config)
+            return response.data
+        }catch(error){
+            return rejectWithValue(error.response?.data || error.message)
+        }
+    }
+)
+
 export const updateSubscription = createAsyncThunk(
     "/subscription/updateSubscription",
     async ({id, updatedData},{rejectWithValue, getState})=>{
@@ -112,7 +148,7 @@ extraReducers: (builder) =>{
     })
     .addCase(fetchSubscriptions.fulfilled, (state, action)=>{
         state.loading = false;
-        state.subscriptions = action?.payload;
+        state.subscriptions = action?.payload?.data;
     })
     .addCase(fetchSubscriptions.rejected, (state, action)=>{
         state.loading = false;
@@ -139,6 +175,30 @@ extraReducers: (builder) =>{
         // state.subscription = action?.payload?.data
     })
     .addCase(diactivateSubscription.rejected, (state, action)=>{
+        state.loading = false
+        state.error = action.payload
+    })
+    .addCase(activateSubscription.pending, (state)=>{
+        state.loading = true;
+        state.error = null
+    })
+    .addCase(activateSubscription.fulfilled, (state, action)=>{
+        state.loading = false
+        // state.subscription = action?.payload?.data
+    })
+    .addCase(activateSubscription.rejected, (state, action)=>{
+        state.loading = false
+        state.error = action.payload
+    })
+    .addCase(deleteSubscription.pending, (state)=>{
+        state.loading = true;
+        state.error = null
+    })
+    .addCase(deleteSubscription.fulfilled, (state, action)=>{
+        state.loading = false
+        // state.subscription = action?.payload?.data
+    })
+    .addCase(deleteSubscription.rejected, (state, action)=>{
         state.loading = false
         state.error = action.payload
     })

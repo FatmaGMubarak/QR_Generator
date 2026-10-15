@@ -26,7 +26,7 @@ export default function AdminHome() {
   const dispatch = useDispatch();
 
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=>state.auth.role);
 
   useEffect(()=>{
     dispatch(fetchProfiles());
@@ -109,7 +109,7 @@ export default function AdminHome() {
                       <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
                       {filteredHomeProfiles?.slice(0, 4)?.map((profile)=>{
                       return (
-                        <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin} activity={profile?.activity_id}/>
+                        <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} activity={profile?.activity_id}/>
                       )
                     })}
                     </div>
@@ -123,14 +123,14 @@ export default function AdminHome() {
         <div className='w-full flex justify-between items-center'>
           <h1 className='text-lg sm:text-xl font-bold'>المنشآت الشخصية</h1>
          {filteredProfiles?.length > 4 &&  <div className='flex items-center gap-x-2 bg-[#397a55] hover:bg-[#2a6041] transition-all ease-in-out text-white px-3 py-2 rounded-lg lg:ml-24'>
-            <Link to={"/admin/display-all-profiles"}>عرض المزيد </Link>
+            <Link to={"/display-all-profiles"}>عرض المزيد </Link>
             <MdKeyboardDoubleArrowLeft className="text-2xl font-bold" />
           </div>}
         </div>
        {filteredProfiles?.length > 0 ? ( <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
           {filteredProfiles?.slice(0, 4)?.map((profile)=>{
           return (
-            <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin} activity={profile?.activity_id}/>
+            <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} activity={profile?.activity_id}/>
           )
         })}
         </div>) : (

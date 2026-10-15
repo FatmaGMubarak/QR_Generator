@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { diactivateSubscription, fetchSubscriptions } from '../../store/reducers/subscriptionSlice';
+import { activateSubscription, deleteSubscription, diactivateSubscription, fetchSubscriptions } from '../../store/reducers/subscriptionSlice';
 import { useNavigate } from 'react-router-dom';
 import notify from '../../hooks/Notifications';
 import AnalyzingImageDemo from '../../components/common/AnalyzingImageDemo';
 import {CalendarCheck, ClipboardClock, MonitorCheck, OctagonMinus, PartyPopper} from "lucide-react";
+import DeleteModal from '../../components/common/DeleteModal';
+import DiactivateModal from '../../components/common/ui/DiactivateModal';
 
 export default function AdminSubscriptions() {
     const [filter, setFilter] = useState('all');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDiactivateModalOpen, setIsDiactivateModalOpen] = useState(false);
+    const [subId, setSubId] = useState(0);
 
   const subscriptions = useSelector((state)=>state?.subscription?.subscriptions);
   const loading = useSelector((state)=>state?.subscription?.loading);
@@ -20,19 +25,48 @@ export default function AdminSubscriptions() {
     dispatch(fetchSubscriptions());
   }, [dispatch])
   const navigateToSub = (id) =>{
-    navigate(`/admin/subscription/${id}`);
+    navigate(`/subscription/${id}`);
   }
 
-  const handleDiactivation = async (id) => {
+
+
+  const handleDiactivation = async () => {
 try{
-    const response = await dispatch(diactivateSubscription(id)).unwrap();
+    const response = await dispatch(diactivateSubscription(subId)).unwrap();
     await dispatch(fetchSubscriptions());
     notify(response.message, "success");
+    setIsDiactivateModalOpen(false);
+}
+catch(err){
+notify(err?.message || "حدث خطأ ما", "error");
+}
+  }
+  const handleActivation = async (id) => {
+try{
+    const response = await dispatch(activateSubscription(id)).unwrap();
+    await dispatch(fetchSubscriptions());
+    notify(response.message, "success");
+}
+catch(err){
+notify(err?.message || "حدث خطأ ما", "error");
+}
+  }
+  const handleDeletion = async () => {
+try{
+    const response = await dispatch(deleteSubscription(subId)).unwrap();
+    await dispatch(fetchSubscriptions());
+    notify(response.message, "success");
+    setIsModalOpen(false);
     
 }
 catch(err){
 notify(err?.message || "حدث خطأ ما", "error");
 }
+  }
+
+    const handleCancelModal = () =>{
+    setIsModalOpen(false);
+    setIsDiactivateModalOpen(false);
   }
 
   const filteredSubscriptions = useMemo(() => {
@@ -44,7 +78,7 @@ notify(err?.message || "حدث خطأ ما", "error");
     const renewalLimit = new Date(today);
     renewalLimit.setDate(today.getDate() + 7);
 
-    return subscriptions.filter((sub) => {
+    return subscriptions?.filter((sub) => {
         const endDate = new Date(sub.end_date);
         endDate.setHours(0, 0, 0, 0);
 
@@ -76,7 +110,7 @@ const handleWhatsAppReminder = (sub) => {
     const cleanPhone = phone.replace(/\D/g, "");
 
     const message =
-        `مرحباً ${sub?.user?.name || ''} 🌷\n\n` +
+        `مرحباً ${sub?.user?.name || ''} \n\n` +
         `نود تذكيرك بأن اشتراكك سينتهي بتاريخ ${sub?.end_date}.\n` +
         `يرجى تجديد الاشتراك للاستمرار في الاستفادة من خدماتنا.\n\n` +
         `شكراً لك`;
@@ -93,6 +127,14 @@ const handleWhatsAppReminder = (sub) => {
           </div>
         )
       }
+
+
+      if(isModalOpen) return(
+          <DeleteModal onConfirm={handleDeletion} onCancel={handleCancelModal} message={"هل أنت متأكد أنك تريد حذف هذا الاشتراك"} isOpen={isModalOpen}/>
+        )
+      if(isDiactivateModalOpen) return(
+          <DiactivateModal onConfirm={handleDiactivation} onCancel={handleCancelModal} message={"هل أنت متأكد أنك تريد الغاء هذا الاشتراك"} isOpen={isDiactivateModalOpen}/>
+        )
   return (
     <div
         className="min-h-screen w-full flex items-start justify-start bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  px-4 py-10 selection:bg-[#FFD600] selection:text-[#1E293B] mt-[20%] md:mt-[7%] lg:mt-[3%]"
@@ -241,7 +283,7 @@ const handleWhatsAppReminder = (sub) => {
                 <th
                 onClick={()=>navigateToSub(sub?.id)}
                 scope="row" className="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                    {sub?.user_id}
+                    {sub?.user_name}
                 </th>
                 <td
                 
@@ -278,9 +320,25 @@ const handleWhatsAppReminder = (sub) => {
                     <button
                      onClick={() => handleWhatsAppReminder(sub)}
                     className='bg-orange-100 hover:bg-orange-200 text-orange-600 text-center rounded-lg border border-orange-700 px-6 py-1.5'>تنبيه</button>
-                    <button
-                    onClick={()=>handleDiactivation(sub?.id)}
+                    
+                    
+              {sub?.status === 'active' ? (
+               <button
+                    onClick={()=>{
+                        setIsDiactivateModalOpen(true)
+                        setSubId(sub?.id)
+                    }}
                     className='bg-red-100 hover:bg-red-200 text-red-600 text-center rounded-lg border border-red-700 px-6 py-1.5'>ايقاف</button>
+              ) : ( <button
+              onClick={()=>handleActivation(sub?.id)}
+              className='bg-green-100 font-semibold hover:bg-green-200 text-green-600 text-center rounded-lg border border-green-700 px-6 py-1.5'>تفعيل</button>)}
+                
+                <button
+                    onClick={()=>{
+                        setIsModalOpen(true)
+                        setSubId(sub?.id)
+                    }}
+                    className='bg-red-100 hover:bg-red-200 text-red-600 text-center rounded-lg border border-red-700 px-6 py-1.5'>حذف</button>
                 </td>
             </tr>
               )

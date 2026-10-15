@@ -15,7 +15,8 @@ import {
   Receipt,
   Menu,
   CalendarCheck,
-  Component
+  Component,
+  
 } from "lucide-react";
 
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
@@ -26,41 +27,47 @@ import { useUserOptions } from "../../../context/UserOptionsContext";
 import notify from "../../../hooks/Notifications";
 
 const links = [
-  { to: "/admin", label: "لوحة التحكم", icon: LayoutDashboard, end: true },
+  { to: "/home", label: "لوحة التحكم", icon: LayoutDashboard, end: true },
   {
-    to: "/admin/create-profile",
+    to: "/create-profile",
     label: "إنشاء صفحة منشأة ",
     icon: ContactRound,
     end: true,
   },
   {
-    to: "/admin/create-category",
+    to: "/create-category",
     label: "إنشاء نشاط",
     icon: Group,
     end: true,
   },
   {
-    to: "/admin/display-all-categories",
+    to: "/display-all-categories",
     label: "الأنشطة",
     icon: Component,
     end: true,
   },
   {
-    to: "/admin/create-subscription",
+    to: "/create-subscription",
     label: "تفعيل اشتراك",
     icon: Receipt,
     end: true,
   },
   {
-    to: "/admin/subscriptions",
+    to: "/subscriptions",
     label: "الاشتراكات",
     icon: CalendarCheck,
     end: true,
   },
   {
-    to: "/admin/change-password",
+    to: "/change-password",
     label: "إعدادات كلمة السر",
     icon: LockKeyhole,
+    end: true,
+  },
+  {
+    to: "/settings",
+    label: "الإعدادات",
+    icon: Settings,
     end: true,
   },
   //{ to: "/admin/users", label: "المستخدمون", icon: Users },
@@ -84,7 +91,7 @@ export default function AdminSidebar() {
   const user = ssUser ?? storedUser;
 
   const goToProfile = () => {
-    navigate("/admin/profile");
+    navigate("/profile");
   };
 
   const handleLogout = async () => {

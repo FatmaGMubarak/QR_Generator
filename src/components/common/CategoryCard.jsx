@@ -3,7 +3,7 @@ import { ArrowLeft, Image, Pencil, Trash2 } from "lucide-react";
 
 import logo from "../../assets/facebookLogo.png";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   deleteCategory,
   fetchCategories,
@@ -14,15 +14,17 @@ import DeleteModal from "../../components/common/DeleteModal"
 export default function CategoryCard({ logoImg, name, id }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const role = useSelector((state)=> state.auth.role);
+
   const navigate = useNavigate();
 
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+
 
   const dispatch = useDispatch();
 
   const handleEdit = () => {
-    navigate(`/admin/category/${id}/edit`);
+    navigate(`/category/${id}/edit`);
   };
 
   const handleCancelModal = () =>{
@@ -195,7 +197,7 @@ export default function CategoryCard({ logoImg, name, id }) {
           </p>
         </div>
 
-        {isAdmin && (
+        {role === 'admin' && (
           <div className="flex justify-center items-center gap-2 mt-5">
             <button
               onClick={handleEdit}

@@ -6,13 +6,14 @@ import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategories } from "../../store/reducers/categorySlice";
 
-export default function ProfileCard({logoImg, name, activity,slug, isAdmin}) {
+export default function ProfileCard({logoImg, name, activity,slug}) {
   const categories = useSelector((state)=>state?.category?.categories);
   const dispatch = useDispatch();
   const location = useLocation();
-  const isUser = location.pathname.includes("/user");
-  const general = !location.pathname.includes("/admin") && !location.pathname.includes("/user");
+  const role = useSelector((state)=>state.auth.role);
+  
   const profileActivity = categories?.find((cat)=>cat?.id === activity);
+
   useEffect(()=>{
     dispatch(fetchCategories());
   }, [dispatch])
@@ -171,7 +172,7 @@ export default function ProfileCard({logoImg, name, activity,slug, isAdmin}) {
         {/* Button */}
         <div className="mt-5 flex justify-center">
           <a
-            href={isAdmin ? `/admin/display-profile/${slug}` :isUser ? `/user/display-profile/${slug}` : `/${slug}`}
+            href={role === 'admin' ? `/display-profile/${slug}` :role === 'user' ? `/display-profile/${slug}` : `/${slug}`}
             className="
               group/button
               relative

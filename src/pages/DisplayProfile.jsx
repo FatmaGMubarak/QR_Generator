@@ -36,10 +36,10 @@ export default function DisplayProfile() {
   const profile = useSelector((state) => state?.profile?.profile);
   const loading = useSelector((state) => state?.profile?.loading);
 
+  const role = useSelector((state)=> state.auth.role);
+
   const location = useLocation();
 
-  const isAdmin = location.pathname.includes("/admin");
-  const general = !location.pathname.includes("/admin") && !location.pathname.includes("/user")
 
   useEffect(() => {
     if (slug) {
@@ -52,22 +52,13 @@ export default function DisplayProfile() {
   }
 
   const handleEdit = () => {
-    if(isAdmin){
-      navigate(`/admin/profile/${slug}/edit`);
-    }
-    else{
-      navigate(`/user/profile/${slug}/edit`);
-    }
+    navigate(`/profile/${slug}/edit`);
   };
 
   const handleDelete = async () => {
     try{
         const response = await dispatch(deleteProfile(slug)).unwrap();
-        if(isAdmin){
-            navigate(`/admin`);
-        }else{
-navigate(`/user`);
-        }
+            navigate(`/home`);
         notify(response.message, "success");
     }catch(err){
         notify(err.message, "error");
@@ -104,7 +95,7 @@ navigate(`/user`);
 
   return (
     <>
-    {general && <AdminTopbar />}
+    {(role !== "Admin" && role !== 'user') && <AdminTopbar />}
     <div
       dir="rtl"
       className="min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-6 sm:px-6 lg:px-8  mt-[20] md:mt-[7%]"
@@ -124,7 +115,7 @@ navigate(`/user`);
             </p>
           </div>
 
-          {!general && (
+          {(role === "admin" || role === 'user') && (
             <div className="flex items-center gap-2">
 
             <button

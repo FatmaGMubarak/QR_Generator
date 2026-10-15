@@ -26,7 +26,7 @@ export default function LandingPage() {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=>state.auth.role)
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -166,7 +166,6 @@ export default function LandingPage() {
                   logoImg={profile?.logo}
                   name={profile?.name}
                   slug={profile?.slug}
-                  isAdmin={isAdmin}
                   activity={profile?.activity_id}
                 />
               ))}

@@ -255,7 +255,9 @@ const submitProfilePage = async (values) => {
     profileData.append("name", values.name);
     profileData.append("activity_id", values.activity?.value);
     profileData.append("about_us", values.bio);
-    profileData.append("menu", values.menu);
+if (values.menu instanceof File) {
+  profileData.append("menu", values.menu);
+}
     profileData.append("email", values.email);
     profileData.append("address", values.address);
     profileData.append("phone", values.phoneNumber);
@@ -287,17 +289,27 @@ const submitProfilePage = async (values) => {
 
     notify(response.message, "success");
     if(role === "admin"){
-      navigate("/admin");
+      navigate("/home");
     }else if(role === "user"){
-      navigate("/user")
+      navigate("/home")
     }
 
     // if (!isEditMode) {
     //   handleCancel(); 
     // }
   } catch (err) {
-    notify(err.message, "error");
+  const messages = err.response?.data?.message;
+
+  if (Array.isArray(messages)) {
+    messages.forEach((item) => {
+      Object.values(item).flat().forEach((message) => {
+        notify(message, "error");
+      });
+    });
+  } else {
+    notify(messages || err.message || "Something went wrong", "error");
   }
+}
 };
 
 //     const createProfilePage = async (values) => {
@@ -407,7 +419,6 @@ const submitProfilePage = async (values) => {
       .max(200, "* برجاء كتابة موقع أقصر")
       .required("* العنوان مطلوب"),
     menu: Yup.mixed()
-      .required("* برجاء رفع قائمة الطعام")
       .test(
         "fileType",
         "* يُسمح فقط بملفات PDF أو JPG أو JPEG أو PNG",

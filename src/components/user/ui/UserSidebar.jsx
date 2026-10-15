@@ -21,9 +21,9 @@ import { logOut } from "../../../store/reducers/auth/authSlice";
 import notify from "../../../hooks/Notifications";
 
 const links = [
-  { to: "/user", label: "الصفحة الرئيسية", icon: Houses, end: true },
-  { to: "/user/dashboard", label: "لوحة التحكم", icon: QrCode , end: true },
-  { to: "/user/create-profile", label: "انشاء منشأة شخصية", icon: SquareUserRound , end: true },
+  { to: "/home", label: "الصفحة الرئيسية", icon: Houses, end: true },
+  { to: "/dashboard", label: "لوحة التحكم", icon: QrCode , end: true },
+  { to: "/create-profile", label: "انشاء منشأة شخصية", icon: SquareUserRound , end: true },
   //{ to: "/admin/users", label: "المستخدمون", icon: Users },
   //{ to: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];
@@ -47,7 +47,7 @@ export default function UserSidebar() {
     const user = ssUser ?? storedUser;
 
       const goToProfile = () => {
-    navigate("/admin/profile");
+    navigate("/profile");
   };
 
     const handleLogout = async () => {

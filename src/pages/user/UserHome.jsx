@@ -23,7 +23,7 @@ export default function UserHome() {
   const dispatch = useDispatch();
 
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=>state.auth.role);
 
   useEffect(() => {
     dispatch(fetchProfiles());
@@ -160,7 +160,7 @@ export default function UserHome() {
                 <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center items-center gap-2'>
                 {filteredHomeProfiles?.slice(0, 4)?.map((profile)=>{
                 return (
-                  <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} isAdmin={isAdmin} activity={profile?.activity_id}/>
+                  <ProfileCard key={profile?.id} logoImg={profile?.logo} name={profile?.name} slug={profile?.slug} activity={profile?.activity_id}/>
                 )
               })}
               </div>

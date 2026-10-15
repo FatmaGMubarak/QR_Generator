@@ -11,7 +11,7 @@ const PAGE_SIZE = 9;
 export default function DisplayAllProfiles() {
   const dispatch = useDispatch();
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=> state.auth.role);
 
   const profiles = useSelector((state) => state?.profile?.profiles) || [];
   const loading = useSelector((state) => state?.profile?.loading);
@@ -83,7 +83,6 @@ export default function DisplayAllProfiles() {
                 name={profile.name}
                 slug={profile.slug}
                 activity={profile?.activity_id}
-                isAdmin={isAdmin}
               />
             ))}
           </div>

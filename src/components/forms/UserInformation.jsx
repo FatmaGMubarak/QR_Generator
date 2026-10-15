@@ -24,7 +24,7 @@ import { fetchUsers } from "../../store/reducers/auth/authSlice.js";
 export default function UserInformation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
+  const role = useSelector((state)=>state.auth.role)
 
   const {
     profile,
@@ -95,7 +95,6 @@ export default function UserInformation() {
   });
 
  const categories = useSelector((state)=>state?.category?.categories);
- const role = useSelector((state)=>state?.auth?.role);
 
 const options = categories?.map((cat) => ({
     value: cat?.id,
@@ -226,11 +225,7 @@ const options = categories?.map((cat) => ({
           qrValue: url,
         }));
         notify(response.message, "success");
-        if (isAdmin) {
-          //navigate("/admin");
-        } else {
-          //navigate("/user");
-        }
+        navigate("/home")
 
         //handleCancel();
       }

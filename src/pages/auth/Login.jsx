@@ -179,7 +179,7 @@ useEffect(() => {
       const response = await dispatch(login(formData)).unwrap();
       if(response.token){
         notify("تم تسجيل الدخول بنجاح", "success")
-        navigate("/user")
+        navigate("/home")
       }
     } catch(err){
         notify(err.message, "error")
@@ -201,7 +201,7 @@ useEffect(() => {
         loginFormData.append("password", values?.password);
         await dispatch(login(loginFormData)).unwrap();
         notify("تم انشاء حساب بنجاح", "success");
-                navigate("/user");
+                navigate("/home");
 
       }
       
@@ -233,7 +233,7 @@ useEffect(() => {
 
    
         <aside className="relative flex flex-col justify-between overflow-hidden">
-          <div className="absolute w-full h-[340px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.45),transparent_70%)] blur-[10px] -top-20 -left-24" />
+          <div className="absolute w-full h-[340px] rounded-full -top-20 -left-24" />
             
           <img src={qr} alt="" className="w-full object-cover h-full shadow-xl" />
         </aside>
