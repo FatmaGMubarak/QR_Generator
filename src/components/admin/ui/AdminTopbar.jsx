@@ -86,16 +86,18 @@ export default function AdminTopbar() {
 
   return (
     <nav
-      className={`
-        fixed
-        top-0
-        end-0
-        z-50
-        bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]
-        ${isSidebarOpen ? "w-[85rem]" : "w-full"}
-        border-b border-[#e5e7eb]
-      `}
-    >
+  className={`
+    fixed
+    top-0
+    end-0
+    start-0
+    ${isSidebarOpen ? "lg:start-64" : ""}
+    z-50
+    bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]
+    border-b border-[#e5e7eb]
+    transition-all duration-300
+  `}
+>
       {/* <nav
       className={`
         fixed
@@ -112,21 +114,10 @@ export default function AdminTopbar() {
         shadow-[0_5px_25px_-15px_rgba(57,122,85,0.25)]
       `}
     > */}
-      <div
-        className="
-          max-w-screen-xl
-          
-          flex
-          items-center
-          justify-between
-          p-4
-          mr-4
-          lg:mr-20
-        "
-      >
+      <div className="flex w-full items-center justify-between gap-2 px-4 py-4 sm:px-6 lg:px-28">
         <button
           type="button"
-          onClick={() => navigate("/admin")}
+          onClick={() => navigate("/home")}
           className="
             group
             flex

@@ -25,9 +25,15 @@ export const fetchSettings = createAsyncThunk(
 
 export const createSettings = createAsyncThunk(
   "settings/createSettings",
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, getState }) => {
     try {
-      const response = await api.post("/settings", formData);
+      const token = getState().auth.token;
+            const config = {
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            }
+      const response = await api.post("/settings", config, formData);
       return response.data;
     } catch (err) {
       return rejectWithValue(
@@ -38,7 +44,7 @@ export const createSettings = createAsyncThunk(
 );
 
 export const updateSettings = createAsyncThunk(
-  "settings/createSettings",
+  "settings/updateSettings",
   async (formData, { rejectWithValue }) => {
     try {
       const response = await api.post("/settings/update", formData);

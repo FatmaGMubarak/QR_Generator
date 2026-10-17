@@ -15,27 +15,16 @@ export default function Topbar() {
 
   return (
     <nav
-      className={`
-        fixed
-        top-0
-        end-0
-        z-50
-        bg-gradient-to-r ${isLoginPage ? 'from-[#ffafcc] via-[#ff8fa3] ' : 'from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]'}
-        w-full
-        border-b border-[#e5e7eb]
-      `}
-    >
-      <div
-        className="
-          max-w-screen-xl
-          mx-auto
-          flex
-          items-center
-          justify-between
-          p-4
-          lg:mr-20
-        "
-      >
+  className={`
+    fixed
+    top-0
+    inset-x-0
+    z-50
+    bg-gradient-to-r ${isLoginPage ? 'from-[#ffafcc] via-[#ff8fa3]' : 'from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]'}
+    border-b border-[#e5e7eb]
+  `}
+>
+     <div className="flex w-full items-center justify-between gap-2 px-4 py-4 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={() => navigate("/")}

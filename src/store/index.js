@@ -5,6 +5,7 @@ import profileSlice  from './reducers/profileSlice';
 import  categorySlice  from './reducers/categorySlice';
 import subscriptionSlice from './reducers/subscriptionSlice';
 import notificationSlice from './reducers/notificationSlice';
+import settingsSlice from './reducers/settingsSlice';
 
 const preloadedState = {
   auth: {
@@ -22,6 +23,7 @@ const store = configureStore(
             category:categorySlice,
             subscription: subscriptionSlice,
             notification: notificationSlice,
+            settings: settingsSlice,
         },
         preloadedState,
     }

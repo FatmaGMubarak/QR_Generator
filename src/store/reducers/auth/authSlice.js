@@ -8,7 +8,7 @@ const initialState = {
   users: [],
   user: null,
   role: null,
-  token: null,
+  token: localStorage.getItem("token"),
   loading: false,
   error: null,
   message: "",
