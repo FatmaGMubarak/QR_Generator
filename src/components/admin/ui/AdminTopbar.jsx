@@ -91,7 +91,7 @@ export default function AdminTopbar() {
     top-0
     end-0
     start-0
-    ${isSidebarOpen ? "lg:start-64" : ""}
+    ${isSidebarOpen ? "lg:start-60" : ""}
     z-50
     bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]
     border-b border-[#e5e7eb]

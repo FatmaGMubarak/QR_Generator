@@ -25,7 +25,7 @@ export default function useUserInformationLogic() {
   const [hasErrors, setHasErrors] = useState(false);
   const [resetForm, setResetForm] = useState(null);
   const [ errors, setErrors] = useState({})
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [mode, setMode] = useState("login");
 
   const [profile, setProfile] = useState({

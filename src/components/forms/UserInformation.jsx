@@ -1,53 +1,421 @@
-import { useEffect, useState } from "react";
-import { ImFilePicture } from "react-icons/im";
-import { HiChevronDown, HiChevronUp } from "react-icons/hi";
-import { useUserOptions } from "../../context/UserOptionsContext";
-import { RiDeleteBin5Fill } from "react-icons/ri";
-import { Formik, Form, Field, useFormik } from "formik";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../services/firebase";
-import {
-  createProfile,
-  updateProfile,
-} from "../../store/reducers/profileSlice";
+import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
-import { IoClose } from "react-icons/io5";
-import { FaLongArrowAltLeft } from "react-icons/fa";
-import notify from "../../hooks/Notifications";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import AnalyzingImageDemo from "../common/AnalyzingImageDemo";
-import Select from 'react-select'
-import {fetchCategories} from '../../store/reducers/categorySlice.js'
+import { useNavigate } from "react-router-dom";
+import { HiChevronDown } from "react-icons/hi";
+import { RiDeleteBin5Fill } from "react-icons/ri";
+import { ImFilePicture } from "react-icons/im";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaTiktok,
+  FaWhatsapp,
+  FaPhoneAlt,
+  FaLongArrowAltLeft,
+} from "react-icons/fa";
+import {
+  MdEmail,
+  MdLocationOn,
+  MdStorefront,
+  MdCategory,
+  MdPerson,
+  MdImage,
+  MdRestaurantMenu,
+  MdShare,
+  MdCheckCircle,
+  MdErrorOutline,
+  MdUndo,
+  MdPhotoCamera,
+} from "react-icons/md";
+
+import { useUserOptions } from "../../context/UserOptionsContext";
+import { createProfile } from "../../store/reducers/profileSlice";
+import { fetchCategories } from "../../store/reducers/categorySlice.js";
 import { fetchUsers } from "../../store/reducers/auth/authSlice.js";
+import notify from "../../hooks/Notifications";
+import AnalyzingImageDemo from "../common/AnalyzingImageDemo";
+import MenuUploader from "./MenuUploader";
+
+/* -------------------------------------------------------------------------- */
+/*                                   config                                   */
+/* -------------------------------------------------------------------------- */
+
+const MENU_FIELD = "menu[]";
+
+const IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg"];
+const MAX_IMAGE = 10 * 1024 * 1024;
+
+const SECTION_FIELDS = {
+  media: [],
+  personal: ["name", "email", "address", "phoneNumber", "bio"],
+  menu: ["menuEntries"],
+  social: ["facebookURL", "instagramURL", "tiktokURL", "whatsappNumber"],
+};
+
+const optionalMatch = (regex, message) =>
+  Yup.string().matches(regex, { message, excludeEmptyString: true });
+
+const validationSchema = Yup.object({
+  name: Yup.string()
+    .min(2, "*برجاء كتابة اسم أطول")
+    .max(50, "*برجاء كتابة اسم أقصر")
+    .required("يجب كتابة اسم المنشأة"),
+  bio: Yup.string()
+    .min(2, "* برجاء كتابة نبذة أطول")
+    .max(500, "*برجاء كتابة نبذة أقصر"),
+  email: Yup.string()
+    .email("* برجاء إدخال بريد إلكتروني صحيح")
+    .test("valid-email", "* برجاء إدخال بريد إلكتروني حقيقي", (value) => {
+      if (!value) return true;
+      const blocked = [
+        "anonymous",
+        "anon",
+        "test",
+        "example",
+        "none",
+        "noemail",
+        "no-email",
+        "null",
+        "undefined",
+      ];
+      return !blocked.includes(value.split("@")[0].toLowerCase());
+    }),
+  address: Yup.string()
+    .min(5, "* برجاء كتابة موقع صحيح")
+    .max(200, "* برجاء كتابة موقع أقصر")
+    .required("* العنوان مطلوب"),
+  phoneNumber: optionalMatch(
+    /^(?:0|20|\+20)(?:1[0125][0-9]{8}|[2-9][0-9]{7,8})$/,
+    "برجاء إدخال رقم هاتف مصري صحيح",
+  ),
+  facebookURL: optionalMatch(
+    /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/i,
+    "برجاء إدخال عنوان صفحة فيسبوك صحيحة.",
+  ),
+  instagramURL: optionalMatch(
+    /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/i,
+    "برجاء إدخال عنوان صفحة انستجرام صحيحة.",
+  ),
+  tiktokURL: optionalMatch(
+    /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/i,
+    "برجاء إدخال عنوان صفحة تيك توك صحيحة.",
+  ),
+  whatsappNumber: optionalMatch(
+    /^(?:\+?20|0)?1[0125][0-9]{8}$/,
+    "برجاء ادخال رقم واتساب مصري صحيح (مثال: 01096890544)",
+  ),
+});
+
+const isValidValue = (key, value) => {
+  try {
+    validationSchema.validateSyncAt(key, { [key]: value });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const slugify = (v = "") => v.toLocaleLowerCase().trim().replace(/\s+/g, "-");
+
+const buildWaUrl = (value = "") => {
+  let clean = value.replace(/\s+/g, "").replace("+", "");
+  if (clean.startsWith("01")) clean = "20" + clean.substring(1);
+  else if (clean.startsWith("1")) clean = "20" + clean;
+  return `https://wa.me/${clean}`;
+};
+
+const waToLocal = (url = "") =>
+  !url || url === "https://wa.me/+2"
+    ? ""
+    : url.replace("https://wa.me/+2", "").replace("https://wa.me/", "");
+
+const toPreviews = (entries) =>
+  entries.map((e) => ({
+    id: e.id,
+    name: e.file?.name,
+    type: e.file?.type,
+    url: e.url,
+  }));
+
+const extractMessages = (err) => {
+  const out = [];
+  const walk = (n) => {
+    if (!n) return;
+    if (typeof n === "string") out.push(n.trim());
+    else if (Array.isArray(n)) n.forEach(walk);
+    else if (typeof n === "object") Object.values(n).forEach(walk);
+  };
+  walk(err?.response?.data?.message ?? err?.message);
+  const unique = [...new Set(out.filter(Boolean))];
+  return unique.length ? unique : ["حدث خطأ ما"];
+};
+
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: state.isFocused ? "#fff" : "#F8FAFC",
+    borderColor: state.isFocused ? "#a53860" : "#CBD5E1",
+    boxShadow: state.isFocused ? "0 0 0 4px rgba(165,56,96,0.1)" : "none",
+    fontWeight: 500,
+    cursor: "pointer",
+    "&:hover": { borderColor: "#a53860" },
+  }),
+  placeholder: (base) => ({ ...base, color: "#94A3B8" }),
+  option: (base, state) => ({
+    ...base,
+    cursor: "pointer",
+    fontWeight: 500,
+    color: state.isSelected ? "#fff" : "#1E293B",
+    backgroundColor: state.isSelected
+      ? "#a53860"
+      : state.isFocused
+        ? "rgba(165,56,96,0.08)"
+        : "#fff",
+  }),
+  menu: (base) => ({ ...base, borderRadius: 12, overflow: "hidden", zIndex: 30 }),
+};
+
+function Section({ icon: Icon, title, subtitle, open, onToggle, errorCount, children }) {
+  return (
+    <section className="w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 overflow-hidden transition-colors duration-300 hover:border-[#a53860]/40">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-x-4 px-5 md:px-6 py-5 bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-colors text-right"
+      >
+        <div className="flex items-center gap-x-4 min-w-0">
+          <span className="relative w-11 h-11 shrink-0 rounded-2xl bg-[#a53860]/10 text-[#a53860] flex items-center justify-center">
+            <Icon size={22} />
+          </span>
+          <div className="min-w-0">
+            <h2 className="font-extrabold text-base md:text-lg text-[#1E293B]">{title}</h2>
+            {subtitle && (
+              <p className="text-xs text-[#94A3B8] font-medium mt-0.5">{subtitle}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-x-3 shrink-0">
+          {errorCount > 0 && (
+            <span className="text-xs font-bold bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 rounded-full">
+              {errorCount} {errorCount === 1 ? "خطأ" : "أخطاء"}
+            </span>
+          )}
+          <HiChevronDown
+            className={`text-2xl text-[#64748B] transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      <div
+        aria-hidden={!open}
+        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+      >
+        <div className="overflow-hidden">
+          <div className="p-5 md:p-6 border-t border-[#E2E8F0]">{children}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TextField({
+  id,
+  label,
+  icon: Icon,
+  error,
+  touched,
+  hint,
+  action,
+  required,
+  multiline,
+  className = "",
+  value = "",
+  maxLength,
+  ...rest
+}) {
+  const showError = Boolean(error && touched);
+  const Tag = multiline ? "textarea" : "input";
+  const base =
+    "w-full bg-[#F8FAFC] border text-[#1E293B] text-sm md:text-base font-medium rounded-xl py-3.5 placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:ring-4 transition-all duration-300";
+  const state = showError
+    ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+    : "border-[#CBD5E1] focus:border-[#a53860] focus:ring-[#a53860]/10";
+
+  return (
+    <div className="w-full" data-error={showError ? "true" : undefined}>
+      <div className="flex items-center justify-between mb-2 min-h-5">
+        <label htmlFor={id} className="block text-sm font-bold text-[#475569] mr-1">
+          {label}
+          {required && <span className="text-red-500 mr-1">*</span>}
+        </label>
+        <div className="flex items-center gap-x-3">
+          {maxLength && (
+            <span
+              className={`text-xs font-bold ${value.length > maxLength ? "text-red-500" : "text-slate-400"}`}
+            >
+              {value.length} / {maxLength}
+            </span>
+          )}
+          {action}
+        </div>
+      </div>
+      <div className="relative">
+        {Icon && (
+          <Icon
+            size={18}
+            className={`absolute right-4 text-slate-400 pointer-events-none ${multiline ? "top-4" : "top-1/2 -translate-y-1/2"}`}
+          />
+        )}
+        <Tag
+          id={id}
+          name={id}
+          value={value}
+          rows={multiline ? 4 : undefined}
+          aria-invalid={showError}
+          className={`${base} ${state} ${Icon ? "pr-12 pl-4" : "px-4"} ${multiline ? "resize-none leading-relaxed" : ""} ${className}`}
+          {...rest}
+        />
+      </div>
+      {showError ? (
+        <p className="flex items-center gap-x-1 text-red-500 text-xs font-bold mt-1.5 mr-1">
+          <MdErrorOutline size={14} />
+          {error}
+        </p>
+      ) : (
+        hint && <p className="text-xs text-[#94A3B8] font-medium mt-1.5 mr-1">{hint}</p>
+      )}
+    </div>
+  );
+}
+
+function ImageUploadCard({ label, hint, url, onPick, onRemove, variant }) {
+  const inputRef = useRef(null);
+  const [err, setErr] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const isCover = variant === "cover";
+
+  const handleFile = (file) => {
+    if (!file) return;
+    if (!IMAGE_TYPES.includes(file.type)) {
+      setErr("صيغة الملف غير مدعومة (JPG أو PNG فقط)");
+      return;
+    }
+    if (file.size > MAX_IMAGE) {
+      setErr("الحد الأقصى لحجم الصورة هو 10 ميجابايت");
+      return;
+    }
+    setErr("");
+    onPick(file);
+  };
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-2 min-h-5">
+        <span className="text-sm font-bold text-[#475569] mr-1">{label}</span>
+        {url && (
+          <button
+            type="button"
+            onClick={() => {
+              setErr("");
+              onRemove();
+            }}
+            className="flex justify-center items-center font-semibold gap-x-2 cursor-pointer bg-[#fa518f] hover:bg-[#fa518f]/75 text-white px-3 py-2 rounded-xl text-xs"
+          >
+            ازالة
+            <RiDeleteBin5Fill />
+          </button>
+        )}
+      </div>
+
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          handleFile(e.dataTransfer.files?.[0]);
+        }}
+        className={`relative group/img w-full h-44 border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center cursor-pointer transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#a53860]/10 ${
+          dragging
+            ? "border-[#a53860] bg-[#a53860]/5"
+            : "border-[#CBD5E1] bg-white hover:border-[#a53860] hover:bg-[#F8FAFC]"
+        }`}
+      >
+        {url ? (
+          <>
+            <img
+              src={url}
+              alt={label}
+              className={`w-full h-full ${isCover ? "object-cover" : "object-contain p-3"}`}
+            />
+            <div className="absolute inset-0 bg-[#1E293B]/55 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-y-1 text-white">
+              <MdPhotoCamera size={26} />
+              <span className="text-sm font-bold">تغيير الصورة</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center text-center px-4">
+            <div className="p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] mb-3 group-hover/img:scale-110 transition-transform">
+              <ImFilePicture className="text-2xl text-[#64748B] group-hover/img:text-[#a53860] transition-colors" />
+            </div>
+            <p className="text-[#334155] font-bold text-sm group-hover/img:text-[#a53860] transition-colors">
+              اضغط أو اسحب الصورة هنا
+            </p>
+            <p className="text-xs text-[#94A3B8] mt-1 font-medium">{hint}</p>
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png, image/jpeg, image/jpg"
+        className="hidden"
+        onChange={(e) => {
+          handleFile(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+
+      {err && (
+        <p className="flex items-center gap-x-1 text-red-500 text-xs font-bold mt-1.5 mr-1">
+          <MdErrorOutline size={14} />
+          {err}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function UserInformation() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const role = useSelector((state)=>state.auth.role)
+
+  const role = useSelector((state) => state?.auth?.role);
+  const users = useSelector((state) => state?.auth?.users);
+  const categories = useSelector((state) => state?.category?.categories);
+  const loadingProfile = useSelector((state) => state?.profile?.loading);
 
   const {
     profile,
-    logoURL,
-    coverURL,
-    name,
-    clientName,
-    activity,
-    bio,
-    email,
-    address,
-    menu,
-    phoneNumber,
-    facebookURL,
-    instagramURL,
-    tiktokURL,
-    whatsappURL,
-    whatsappNumber,
     qrProfile,
-    errors,
-    hasErrors,
-    menuPreviewUrl,
-
     setLogoURL,
     setCoverURL,
     setName,
@@ -62,8 +430,8 @@ export default function UserInformation() {
     setInstagramURL,
     setTiktokURL,
     setWhatsappURL,
-    setProfile,
     setWhatsappNumber,
+    setProfile,
     setQrProfile,
     setErrors,
     setHasErrors,
@@ -72,47 +440,103 @@ export default function UserInformation() {
     setQrValue,
   } = useUserOptions();
 
-  
   const [selectedUser, setSelectedUser] = useState(null);
   const [openSections, setOpenSections] = useState({
     media: true,
     personal: true,
+    menu: true,
     social: true,
   });
 
-    const users = useSelector((state) => state?.auth?.users);
+  const userOptions = useMemo(
+    () => users?.map((u) => ({ value: u?.id, label: `${u?.name} - ${u?.phone}` })) || [],
+    [users],
+  );
 
+  const options = useMemo(
+    () => categories?.map((c) => ({ value: c?.id, label: c?.name })) || [],
+    [categories],
+  );
+  useEffect(()=>{
+console.log(profile)
+  }, [profile])
 
-   const userOptions =
-    users?.map((user) => ({
-      value: user?.id,
-      label: `${user?.name} - ${user?.phone}`,
-    })) || [];
+  const initialValues = useMemo(
+    () => ({
+      name: profile?.name || "",
+      activity: profile?.activity || null,
+      bio: profile?.bio || "",
+      email: profile?.email || "",
+      address: profile?.address || "",
+      phoneNumber: profile?.phoneNumber || "",
+      facebookURL: profile?.facebookURL || "",
+      instagramURL: profile?.instagramURL || "",
+      tiktokURL: profile?.tiktokURL || "",
+      whatsappNumber: profile?.whatsappNumber || "",
+      logoURL: profile?.logoURL || "",
+      coverURL: profile?.coverURL || "",
+      logoImageFile: null,
+      coverImageFile: null,
+      menuEntries: profile?.menuFiles || [],
+    }),
+    [profile]
+  );
 
-  const [loading, setLoading] = useState({
-    logoURL: false,
-    coverURL: false,
+  async function submitProfilePage(values) {
+    try {
+      const profileData = new FormData();
+      profileData.append("name", values.name);
+      if (values.activity?.value) profileData.append("activity_id", values.activity.value);
+      profileData.append("about_us", values.bio);
+      profileData.append("email", values.email);
+      profileData.append("address", values.address);
+      profileData.append("phone", values.phoneNumber);
+      profileData.append("facebook", values.facebookURL);
+      profileData.append("instagram", values.instagramURL);
+      profileData.append("tiktok", values.tiktokURL);
+      profileData.append("whatsapp", values.whatsappNumber);
+
+      if (values.logoImageFile instanceof File) {
+        profileData.append("logo", values.logoImageFile);
+      }
+      if (values.coverImageFile instanceof File) {
+        profileData.append("cover", values.coverImageFile);
+      }
+
+      values.menuEntries.forEach((entry) => {
+        if (entry.file instanceof File) {
+          profileData.append(MENU_FIELD, entry.file);
+        }
+      });
+
+      const response = await dispatch(createProfile(profileData)).unwrap();
+
+      if (response) {
+        const url = `https://linkaty.online/${response?.slug}`;
+        setQrValue(url);
+        setProfile((prev) => ({ ...prev, qrValue: url }));
+        notify(response?.message || "تم إنشاء الصفحة بنجاح", "success");
+        navigate("/home");
+      }
+    } catch (err) {
+      extractMessages(err).forEach((m) => notify(m, "error"));
+    }
+  }
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    validationSchema,
+    onSubmit: submitProfilePage,
   });
 
- const categories = useSelector((state)=>state?.category?.categories);
+  const v = formik.values;
+  const saving = Boolean(loadingProfile || formik.isSubmitting);
 
-const options = categories?.map((cat) => ({
-    value: cat?.id,
-    label: cat?.name,
-  })) || [];
-
-
-
-  const loadingProfile = useSelector((state)=> state?.profile?.loading);
-
-  const dispatch = useDispatch();
-
-    useEffect(()=>{
+  useEffect(() => {
     dispatch(fetchCategories());
-    if(role === 'admin'){
-      dispatch(fetchUsers());
-    }
-  }, [dispatch, role])
+    if (role === "admin") dispatch(fetchUsers());
+  }, [dispatch, role]);
 
   useEffect(() => {
     sessionStorage.setItem("profileCreated", JSON.stringify(profile));
@@ -122,13 +546,114 @@ const options = categories?.map((cat) => ({
     sessionStorage.setItem("QR Profile", JSON.stringify(qrProfile));
   }, [qrProfile]);
 
+  useEffect(() => {
+    setHasErrors(Object.keys(formik.errors).length > 0);
+    setErrors(formik.errors);
+  }, [formik.errors]);
+
+  useEffect(() => {
+    setResetForm(() => formik.resetForm);
+    return () => setResetForm(null);
+  }, [setResetForm]);
+
+  const contextSetters = {
+    name: setName,
+    bio: setBio,
+    email: setEmail,
+    address: setAddress,
+    phoneNumber: setPhoneNumber,
+    facebookURL: setFacebookURL,
+    instagramURL: setInstagramURL,
+    tiktokURL: setTiktokURL,
+  };
+  const PUSH_ALWAYS = ["name", "email", "address"];
+
+  const handleText = (key) => (e) => {
+    const value = e.target.value;
+    formik.setFieldValue(key, value);
+    contextSetters[key]?.(value);
+
+    const patch = { [key]: value, ...(key === "name" ? { userName: slugify(value) } : {}) };
+    setProfile((prev) => ({ ...prev, ...patch }));
+
+    const ok = PUSH_ALWAYS.includes(key) || isValidValue(key, value);
+    setQrProfile((prev) => ({ ...prev, ...(ok ? patch : { [key]: "" }) }));
+  };
+
+  const applyWhatsapp = (value) => {
+    formik.setFieldValue("whatsappNumber", value);
+    setWhatsappNumber(value);
+    const url = value.trim() ? buildWaUrl(value) : "";
+    setWhatsappURL(url);
+    setProfile((prev) => ({ ...prev, whatsappNumber: value, whatsappURL: url }));
+    const ok = !value || isValidValue("whatsappNumber", value);
+    setQrProfile((prev) => ({
+      ...prev,
+      whatsappNumber: ok ? value : "",
+      whatsappURL: ok ? url : "",
+    }));
+  };
+
+  const handleActivity = (option) => {
+    formik.setFieldValue("activity", option);
+    setActivity(option);
+    setProfile((prev) => ({ ...prev, activity: option }));
+    setQrProfile((prev) => ({ ...prev, activity: option }));
+  };
+
+  const handleClient = (option) => {
+    if (!option) {
+      setSelectedUser(null);
+      setClientName("");
+      return;
+    }
+    const user = users?.find((u) => u?.id === option.value);
+    setSelectedUser(user || null);
+    setClientName(user?.name || "");
+    setProfile((prev) => ({ ...prev, clientName: user?.name }));
+    setQrProfile((prev) => ({ ...prev, clientName: user?.name }));
+  };
+
+  const pickImage = (kind) => (file) => {
+    const isLogo = kind === "logo";
+    const fileKey = isLogo ? "logoImageFile" : "coverImageFile";
+    const urlKey = isLogo ? "logoURL" : "coverURL";
+    const old = v[urlKey];
+    if (old?.startsWith("blob:")) URL.revokeObjectURL(old);
+    const url = URL.createObjectURL(file);
+
+    formik.setFieldValue(fileKey, file);
+    formik.setFieldValue(urlKey, url);
+    (isLogo ? setLogoURL : setCoverURL)(url);
+    setProfile((prev) => ({ ...prev, [urlKey]: url }));
+    setQrProfile((prev) => ({ ...prev, [urlKey]: url }));
+  };
+
+  const removeImage = (kind) => () => {
+    const isLogo = kind === "logo";
+    const fileKey = isLogo ? "logoImageFile" : "coverImageFile";
+    const urlKey = isLogo ? "logoURL" : "coverURL";
+    const old = v[urlKey];
+    if (old?.startsWith("blob:")) URL.revokeObjectURL(old);
+
+    formik.setFieldValue(fileKey, null);
+    formik.setFieldValue(urlKey, "");
+    (isLogo ? setLogoURL : setCoverURL)("");
+    setProfile((prev) => ({ ...prev, [urlKey]: "" }));
+    setQrProfile((prev) => ({ ...prev, [urlKey]: "" }));
+  };
+
+  const handleMenuChange = (entries) => {
+    formik.setFieldValue("menuEntries", entries);
+    const previews = toPreviews(entries);
+    setMenuPreviewUrl(previews);
+    setProfile((prev) => ({ ...prev, menu: previews }));
+    setQrProfile((prev) => ({ ...prev, menu: previews }));
+  };
+
   const handleCancel = async () => {
-    if (profile?.logoURL?.startsWith("blob:")) {
-      URL.revokeObjectURL(profile.logoURL);
-    }
-    if (profile?.coverURL?.startsWith("blob:")) {
-      URL.revokeObjectURL(profile.coverURL);
-    }
+    [v.logoURL, v.coverURL].forEach((u) => u?.startsWith("blob:") && URL.revokeObjectURL(u));
+    v.menuEntries.forEach((e) => e.url?.startsWith("blob:") && URL.revokeObjectURL(e.url));
 
     sessionStorage.removeItem("profileCreated");
     sessionStorage.removeItem("QR Profile");
@@ -187,1273 +712,288 @@ const options = categories?.map((cat) => ({
     setQrValue("");
   };
 
-  const submitProfilePage = async (values) => {
-    if (profile?.name.length === 0) {
-      return;
-    }
-
-    try {
-      const profileData = new FormData();
-      profileData.append("name", values.name);
-      profileData.append("activity_id", profile?.activity?.value);
-      profileData.append("about_us", values.bio);
-      profileData.append("email", values.email);
-      profileData.append("address", values.address);
-      profileData.append("phone", values.phoneNumber);
-      profileData.append("facebook", values.facebookURL);
-      profileData.append("instagram", values.instagramURL);
-      profileData.append("tiktok", values.tiktokURL);
-      profileData.append("whatsapp", profile?.whatsappNumber);
-
-      if (values.logoImageFile instanceof File) {
-        profileData.append("logo", values.logoImageFile);
-      }
-      if (values.coverImageFile instanceof File) {
-        profileData.append("cover", values.coverImageFile);
-      }
-      if (values.menu instanceof File) {
-        profileData.append("menu", values.menu);
-      }
-
-      const response = await dispatch(createProfile(profileData)).unwrap();
-
-      if (response) {
-        const url = `https://linkaty.online/${response?.slug}`;
-        setQrValue(url);
-        setProfile((prev) => ({
-          ...prev,
-          qrValue: url,
-        }));
-        notify(response.message, "success");
-        navigate("/home")
-
-        //handleCancel();
-      }
-    } catch (err) {
-      notify(err.message, "error");
-    }
-  };
-
-  //     const createProfilePage = async (values) => {
-  //     if(hasErrors || profile?.name.length === 0){
-  //       return;
-  //     }
-  //    try{
-  //  const profileData = new FormData();
-  //      profileData.append("name", values.name);
-  //   profileData.append("about_us", values.bio);
-  //   profileData.append("email", values.email);
-  //   profileData.append("address", values.address);
-  //   profileData.append("phone", values.phoneNumber);
-
-  //   profileData.append("facebook", values.facebookURL);
-  //   profileData.append("instagram", values.instagramURL);
-  //   profileData.append("tiktok", values.tiktokURL);
-  //   profileData.append("whatsapp", values.whatsappNumber);
-  //   console.log(values.logoImageFile)
-  //   console.log(values.coverImageFile)
-  //   console.log(values.menu)
-  //     if (values.logoImageFile instanceof File) {
-  //     profileData.append("logo", values.logoImageFile);
-  //   }
-
-  //   if (values.coverImageFile instanceof File) {
-  //     profileData.append("cover", values.coverImageFile);
-  //   }
-
-  //   if (values.menu instanceof File) {
-  //     profileData.append("menu", values.menu);
-  //   }
-  //     const response = await dispatch(createProfile(profileData)).unwrap();
-  //     //  const url = `https://scanned-three.vercel.app/profile/${profile.userName}`;
-  //     // setQrValue(url);
-  //     // setProfile((prev)=>({
-  //     //   ...prev,
-  //     //   qrValue: url,
-  //     // }))
-  //     notify(response.message);
-  //     handleCancel();
-  //    }catch(err){
-  // notify(err.message, "error")
-  //    }
-  //   };
-
-  const validationSchema = Yup.object({
-    logoImageFile: Yup.mixed()
-      .nullable()
-      .test(
-        "fileSize",
-        "الحد الأقصى لحجم الصورة هو 10 ميجابايت",
-        (value) => !value || value.size <= 10000000,
-      )
-      .test(
-        "fileType",
-        "صيغة الملف غير مدعومة",
-        (value) =>
-          !value ||
-          ["image/jpg", "image/jpeg", "image/png"].includes(value.type),
-      ),
-    coverImageFile: Yup.mixed()
-      .nullable()
-      .test(
-        "fileSize",
-        "الحد الأقصى لحجم الصورة هو 10 ميجابايت",
-        (value) => !value || value.size <= 10000000,
-      )
-      .test(
-        "fileType",
-        "صيغة الملف غير مدعومة",
-        (value) =>
-          !value ||
-          ["image/jpg", "image/jpeg", "image/png"].includes(value.type),
-      ),
-    name: Yup.string()
-      .min(2, "*برجاء كتابة اسم أطول")
-      .max(50, "*برجاء كتابة اسم أقصر")
-      .required("يجب كتابة اسم المنشأة"),
-    bio: Yup.string()
-      .min(2, "* برجاء كتابة نبذة أطول")
-      .max(500, "*برجاء كتابة نبذة أقصر"),
-    email: Yup.string()
-      .email("* برجاء إدخال بريد إلكتروني صحيح")
-      .required("* البريد الإلكتروني مطلوب")
-      .test("valid-email", "* برجاء إدخال بريد إلكتروني حقيقي", (value) => {
-        if (!value) return true;
-
-        const blockedValues = [
-          "anonymous",
-          "anon",
-          "test",
-          "example",
-          "none",
-          "noemail",
-          "no-email",
-          "null",
-          "undefined",
-        ];
-
-        const emailName = value.split("@")[0].toLowerCase();
-
-        return !blockedValues.includes(emailName);
-      }),
-    address: Yup.string()
-      .min(5, "* برجاء كتابة موقع صحيح")
-      .max(200, "* برجاء كتابة موقع أقصر")
-      .required("* العنوان مطلوب"),
-    menu: Yup.mixed()
-      .required("* برجاء رفع قائمة الطعام")
-      .test(
-        "fileType",
-        "* يُسمح فقط بملفات PDF أو JPG أو JPEG أو PNG",
-        (value) => {
-          if (!value) return true;
-
-          const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
-
-          return allowedTypes.includes(value.type);
-        },
-      )
-      .test("fileSize", "* حجم الملف يجب ألا يتجاوز 5 ميجابايت", (value) => {
-        if (!value) return true;
-
-        return value.size <= 5 * 1024 * 1024;
-      }),
-    phoneNumber: Yup.string()
-  .matches(
-    /^(?:0|20|\+20)(?:1[0125][0-9]{8}|[2-9][0-9]{7,8})$/,
-    "برجاء إدخال رقم هاتف مصري صحيح"
-  ),
-    facebookURL: Yup.string()
-  .matches(
-    /^(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/.+$/i,
-    "برجاء إدخال عنوان صفحة فيسبوك صحيحة."
-  ),
-    instagramURL: Yup.string()
-  .matches(
-    /^(?:https?:\/\/)?(?:www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?(?:\?.*)?$/i,
-    "برجاء إدخال عنوان صفحة انستجرام صحيحة."
-  ),
-   tiktokURL: Yup.string()
-  .matches(
-    /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.+$/i,
-    "برجاء إدخال عنوان صفحة تيك توك صحيحة."
-  ),
-    whatsappNumber: Yup.string().matches(
-      /^(?:\+?20|0)?1[0125][0-9]{8}$/,
-      "برجاء ادخال رقم واتساب مصري صحيح (مثال: 01096890544 أو 201096890544)",
-    ),
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      name: profile?.name || "",
-      bio: profile?.bio || "",
-      email: profile?.email || "",
-      address: profile?.address || "",
-      menu: profile?.menu || null,
-      phoneNumber: profile?.phoneNumber || "",
-      facebookURL: profile?.facebookURL || "",
-      instagramURL: profile?.instagramURL || "",
-      tiktokURL: profile?.tiktokURL || "",
-      whatsappNumber: profile?.whatsappNumber || "",
-      whatsappURL: profile?.whatsappURL || "",
-      logoURL: profile?.logoURL || "",
-      coverURL: profile?.coverURL || "",
-      logoImageFile: null,
-      coverImageFile: null,
-    },
-    validationSchema,
-  });
-
-  const toggleSection = (section) => {
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  const handleFileChangeSize = async (e, fieldName, successCallback) => {
-    const file = e.target.files[0] || e.target.files[1];
-    if (!file) return;
-
-    formik.setFieldValue(fieldName, file);
-    formik.setFieldTouched(fieldName, true, false);
-
-    const isValidType = ["image/png", "image/jpg", "image/jpeg"].includes(
-      file.type,
+  const handleSave = async () => {
+    const errs = await formik.validateForm();
+    formik.setTouched(
+      Object.keys(formik.values).reduce((acc, k) => ({ ...acc, [k]: true }), {}),
+      false,
     );
-    const isValidSize = file.size <= 10000000;
-
-    if (!isValidType) {
-      formik.setFieldError(fieldName, "صيغة الملف غير مدعومة");
-
+    if (Object.keys(errs).length) {
+      setOpenSections((prev) => {
+        const next = { ...prev };
+        Object.entries(SECTION_FIELDS).forEach(([section, fields]) => {
+          if (fields.some((f) => errs[f])) next[section] = true;
+        });
+        return next;
+      });
+      notify("برجاء مراجعة الحقول المطلوبة", "error");
+      setTimeout(() => {
+        document
+          .querySelector('[data-error="true"]')
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
       return;
     }
-
-    if (!isValidSize) {
-      formik.setFieldError(fieldName, "الحد الأقصى لحجم الصورة هو 10 ميجابايت");
-
-      return;
-    }
-
-    // No upload needed — just create a local preview URL for the selected file.
-    // The actual File object is already stored in formik state (logoImageFile /
-    // coverImageFile) and gets sent to the backend in submitProfilePage.
-    const previewUrl = createLocalPreview(file);
-    if (previewUrl) {
-      successCallback(previewUrl);
-    }
+    await formik.submitForm();
   };
 
-  const createLocalPreview = (file) => {
-    try {
-      return URL.createObjectURL(file);
-    } catch (error) {
-      console.error("Failed to create local preview for file:", error);
-      return null;
-    }
-  };
+  const toggleSection = (key) => setOpenSections((p) => ({ ...p, [key]: !p[key] }));
+  const errorCount = (section) =>
+    SECTION_FIELDS[section].filter((k) => formik.errors[k] && formik.touched[k]).length;
 
-  const deleteImage = (imgName) => {
-    if (imgName === "logoURL" && profile?.logoURL.length > 0) {
-      if (profile.logoURL.startsWith("blob:")) {
-        URL.revokeObjectURL(profile.logoURL);
-      }
-      formik.setFieldValue("logoImageFile", null);
-      setLogoURL("");
-      setProfile((prev) => ({
-        ...prev,
-        logoURL: "",
-      }));
-      setQrProfile((prev) => ({ ...prev, logoURL: "" }));
-    }
-    if (imgName === "coverURL" && profile?.coverURL.length > 0) {
-      if (profile.coverURL.startsWith("blob:")) {
-        URL.revokeObjectURL(profile.coverURL);
-      }
-      formik.setFieldValue("coverImageFile", null);
-      setCoverURL("");
-      setProfile((prev) => ({
-        ...prev,
-        coverURL: "",
-      }));
-      setQrProfile((prev) => ({ ...prev, coverURL: "" }));
-    }
-  };
+  const fieldProps = (key) => ({
+    id: key,
+    value: v[key],
+    error: formik.errors[key],
+    touched: formik.touched[key],
+    onBlur: formik.handleBlur,
+    onChange: handleText(key),
+  });
 
-  // const getProfile = async () => {
-  //   const displayedName = formik.values.name
-  //     .toLocaleLowerCase()
-  //     .trim()
-  //     .replace(/\s+/g, "-");
-  //   const q = query(
-  //     collection(db, "profiles"),
-  //     where("userName", "==", displayedName),
-  //   );
-
-  //   const snapshot = await getDocs(q);
-
-  //   if (!snapshot.empty) {
-  //     formik.setFieldError("name", "اسم المنشأة موجود بالفعل");
-
-  //     return false;
-  //   }
-  //   return true;
-  // };
-
-  useEffect(() => {
-    setHasErrors(Object.keys(formik.errors).length > 0);
-    setErrors(formik.errors);
-  }, [formik.errors]);
-
-  useEffect(() => {
-    setResetForm(() => formik.resetForm);
-
-    return () => setResetForm(null);
-  }, [setResetForm]);
-
-  useEffect(() => {
-    if (profile?.whatsappNumber.length !== 11 && phoneNumber) {
-      const value = phoneNumber;
-      let cleanNumber = value.replace(/\s+/g, "").replace("+", "");
-      if (cleanNumber.startsWith("01")) {
-        cleanNumber = "20" + cleanNumber.substring(1);
-      } else if (cleanNumber.startsWith("1")) {
-        cleanNumber = "20" + cleanNumber;
-      }
-      const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
-
-      setWhatsappNumber(value);
-      setWhatsappURL(generatedWhatsAppURL);
-      setProfile((prev) => ({
-        ...prev,
-        whatsappNumber: value,
-        whatsappURL: generatedWhatsAppURL,
-      }));
-
-      formik.setFieldValue("whatsappNumber", value);
-    }
-  }, [phoneNumber]);
+  const socials = [
+    { key: "facebookURL", label: "صفحة فيسبوك", icon: FaFacebook, placeholder: "https://facebook.com/username" },
+    { key: "instagramURL", label: "صفحة انستجرام", icon: FaInstagram, placeholder: "https://instagram.com/username" },
+    { key: "tiktokURL", label: "صفحة تيك توك", icon: FaTiktok, placeholder: "https://tiktok.com/@username" },
+  ];
 
   return (
-    <div className=" pb-6 w-full text-[#1E293B] px-4 selection:bg-[#FFD600] selection:text-[#1E293B] rounded-3xl">
+    <div className="pb-12 w-full text-[#1E293B] px-4 selection:bg-[#FFD600] selection:text-[#1E293B]">
       <form
-        className="w-full max-w-3xl mx-auto flex flex-col gap-y-8"
-        onSubmit={(e) => e.preventDefault()}
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+        className="w-full max-w-3xl mx-auto flex flex-col gap-y-6"
       >
-        {/* SECTION 1: MEDIA */}
-        <div className="w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 overflow-hidden transition-all duration-300 hover:border-[#a53860]/40 hover:shadow-[#a53860]/10">
-          <button
-            type="button"
-            onClick={() => toggleSection("media")}
-            className="w-full flex justify-between items-center px-6 py-5 bg-[#F8FAFC] border-b border-[#E2E8F0] hover:bg-[#F1F5F9] transition-all group"
-          >
-            <span className="font-extrabold text-lg text-[#1E293B] group-hover:text-[#a53860] transition-all duration-300">
-              أولاً: صور الصفحة (اللوجو والغلاف)
-            </span>
-            {openSections.media ? (
-              <HiChevronUp className="text-2xl text-[#a53860] transition-transform duration-300" />
-            ) : (
-              <HiChevronDown className="text-2xl text-[#64748B] group-hover:text-[#a53860] transition-transform duration-300" />
-            )}
-          </button>
 
-          {openSections.media && (
-            <div className="p-6 flex flex-col md:flex-row gap-6">
-              {/* صورة اللوجو */}
-              <div className="w-full md:w-1/2">
-                <div className="w-full flex justify-between items-center mb-3">
-                  <label
-                    htmlFor="logo-upload"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    صورة اللوجو
-                  </label>
-                  <div
-                    onClick={() => deleteImage("logoURL")}
-                    disabled={profile?.logoURL.length <= 0}
-                    className={`flex justify-center items-center gap-x-2  hover:bg-[#fa518f]/75 text-white px-3 py-2 rounded-xl ${profile?.logoURL.length > 0 ? "cursor-pointer bg-[#fa518f]" : "cursor-not-allowed bg-[#fa518f]/75"}`}
-                  >
-                    <button
-                      className={`font-semibold ${profile?.logoURL.length > 0 ? "cursor-pointer" : "cursor-not-allowed"}`}
-                    >
-                      ازالة الصورة
-                    </button>
-                    <RiDeleteBin5Fill className="text-white" />
-                  </div>
-                </div>
 
-                <div
-                  className={`${loading?.logoURL ? "bg-blur-50" : ""}relative w-full h-44 border-2 border-dashed border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] hover:border-[#a53860] rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group/box shadow-sm`}
-                >
-                  <input
-                    disabled={loading?.logoURL}
-                    accept="image/png, image/jpeg, image/jpg"
-                    id="logo-upload"
-                    type="file"
-                    className={`absolute inset-0 opacity-0 ${loading?.logoURL ? "cursor-not-allowed" : "cursor-pointer"} z-10`}
-                    onChange={async (e) => {
-                      await handleFileChangeSize(e, "logoImageFile", (url) => {
-                        setLogoURL(url);
-                        setProfile((prev) => ({ ...prev, logoURL: url }));
-                        setQrProfile((prev) => ({ ...prev, logoURL: url }));
-                      });
-                      e.target.value = "";
-                    }}
-                  />
-                  <div
-                    className={` ${profile?.logoURL.length > 0 ? "p-1" : "p-4"} rounded-md bg-[#F1F5F9] border border-[#E2E8F0] group-hover/box:scale-110 group-hover/box:border-[#a53860]/30 group-hover/box:bg-[#E0F2FE] mb-3 transition-all duration-300`}
-                  >
-                    {profile.logoURL?.length > 0 ? (
-                      <img
-                        src={profile.logoURL || logoURL}
-                        alt="logo_image"
-                        className="w-24 h-20 object-contain"
-                      />
-                    ) : (
-                      <ImFilePicture className="text-2xl text-[#64748B] group-hover/box:text-[#a53860] transition-colors" />
-                    )}
-                  </div>
-                  <p className="text-[#334155] font-bold text-sm group-hover/box:text-[#a53860] transition-colors">
-                    اضغط لرفع صورة اللوجو
-                  </p>
-                  <p className="text-xs text-[#94A3B8] mt-1.5 font-medium">
-                    JPG, PNG - يفضل مقاس مربع
-                  </p>
-                  {formik.errors.logoImageFile &&
-                    formik.touched.logoImageFile && (
-                      <p className="text-red-500 text-sm mt-1 text-center font-bold">
-                        {formik.errors.logoImageFile}
-                      </p>
-                    )}
-                </div>
-              </div>
-
-              {/* صورة الغلاف */}
-              <div className="w-full md:w-1/2">
-                <div className="w-full flex justify-between items-center mb-3">
-                  <label
-                    htmlFor="cover-upload"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    صورة الغلاف
-                  </label>
-                  <div
-                    onClick={() => deleteImage("coverURL")}
-                    disabled={profile?.coverURL.length <= 0}
-                    className={`flex justify-center items-center gap-x-2 bg-[#fa518f] hover:bg-[#fa518f]/75 text-white px-3 py-2 rounded-xl ${profile?.coverURL.length > 0 ? "cursor-pointer bg-[#fa518f]" : "cursor-not-allowed bg-[#fa518f]/75"}`}
-                  >
-                    <button
-                      className={`font-semibold ${profile?.coverURL.length > 0 ? "cursor-pointer" : "cursor-not-allowed"}`}
-                    >
-                      ازالة الصورة
-                    </button>
-                    <RiDeleteBin5Fill className="text-white" />
-                  </div>
-                </div>
-                <div
-                  className={`${loading?.coverURL ? "" : ""}relative w-full h-44 border-2 border-dashed border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] hover:border-[#a53860] rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden group/box shadow-sm`}
-                >
-                  <input
-                    id="cover-upload"
-                    type="file"
-                    accept="image/png, image/jpg, image/jpeg"
-                    disabled={loading?.coverURL}
-                    className={`absolute inset-0 opacity-0 cursor-pointer z-10 ${loading?.coverURL ? "cursor-not-allowed" : "cursor-pointer"}`}
-                    onChange={async (e) => {
-                      await handleFileChangeSize(e, "coverImageFile", (url) => {
-                        setCoverURL(url);
-                        setProfile((prev) => ({ ...prev, coverURL: url }));
-                        setQrProfile((prev) => ({ ...prev, coverURL: url }));
-                      });
-                      e.target.value = "";
-                    }}
-                  />
-                  <div
-                    className={`${profile?.coverURL.length > 0 ? "p-1" : "p-4"} rounded-md bg-[#F1F5F9] border border-[#E2E8F0] group-hover/box:scale-110 group-hover/box:border-[#a53860]/30 group-hover/box:bg-[#E0F2FE] mb-3 transition-all duration-300`}
-                  >
-                    {profile.coverURL.length > 0 ? (
-                      <img
-                        src={profile.coverURL || coverURL}
-                        alt="cover_image"
-                        className="w-24 h-20 object-contain"
-                      />
-                    ) : (
-                      <ImFilePicture className="text-2xl text-[#64748B] group-hover/box:text-[#a53860] transition-colors" />
-                    )}
-                  </div>
-                  <p className="text-[#334155] font-bold text-sm group-hover/box:text-[#a53860] transition-colors">
-                    اضغط لرفع صورة الغلاف
-                  </p>
-                  <p className="text-xs text-[#94A3B8] mt-1.5 font-medium">
-                    JPG, PNG - يفضل مقاس أفقي
-                  </p>
-                  {formik.errors.coverImageFile &&
-                    formik.touched.coverImageFile && (
-                      <p className="text-red-500 text-sm mt-1 text-center font-bold">
-                        {formik.errors.coverImageFile}
-                      </p>
-                    )}
-                </div>
-              </div>
+        <Section
+          icon={MdImage}
+          title="صور الصفحة"
+          subtitle="اللوجو وصورة الغلاف"
+          open={openSections.media}
+          onToggle={() => toggleSection("media")}
+          errorCount={errorCount("media")}
+        >
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="w-full md:w-1/2">
+              <ImageUploadCard
+                label="صورة اللوجو"
+                hint="JPG, PNG - يفضل مقاس مربع"
+                variant="logo"
+                url={v.logoURL}
+                onPick={pickImage("logo")}
+                onRemove={removeImage("logo")}
+              />
             </div>
-          )}
-        </div>
+            <div className="w-full md:w-1/2">
+              <ImageUploadCard
+                label="صورة الغلاف"
+                hint="JPG, PNG - يفضل مقاس أفقي"
+                variant="cover"
+                url={v.coverURL}
+                onPick={pickImage("cover")}
+                onRemove={removeImage("cover")}
+              />
+            </div>
+          </div>
+        </Section>
 
-        {/* SECTION 2: PERSONAL INFO */}
-        <div className="w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 overflow-hidden transition-all duration-300 hover:border-[#a53860]/40 hover:shadow-[#a53860]/10">
-          <button
-            type="button"
-            onClick={() => toggleSection("personal")}
-            className="w-full flex justify-between items-center px-6 py-5 bg-[#F8FAFC] border-b border-[#E2E8F0] hover:bg-[#F1F5F9] transition-all group"
-          >
-            <span className="font-extrabold text-lg text-[#1E293B] group-hover:text-[#a53860] transition-all duration-300">
-              ثانياً: البيانات الأساسية
-            </span>
+        <Section
+          icon={MdStorefront}
+          title="البيانات الأساسية"
+          subtitle="اسم المنشأة ووسائل الوصول إليك"
+          open={openSections.personal}
+          onToggle={() => toggleSection("personal")}
+          errorCount={errorCount("personal")}
+        >
+          <div className="flex flex-col gap-y-5">
+            <TextField
+              {...fieldProps("name")}
+              label="اسم المنشأة"
+              icon={MdStorefront}
+              required
+              placeholder="اكتب اسم المنشأة هنا"
+            />
 
-            {openSections.personal ? (
-              <HiChevronUp className="text-2xl text-[#a53860] transition-transform duration-300" />
-            ) : (
-              <HiChevronDown className="text-2xl text-[#64748B] group-hover:text-[#a53860] transition-transform duration-300" />
-            )}
-          </button>
-
-          {openSections.personal && (
-            <div className="p-6 flex flex-col gap-y-5">
-              {/* اسم المنشأة */}
+            {role === "admin" && (
               <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    اسم المنشأة
-                  </label>
-
-                  {formik.errors.name && formik.touched.name && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.name}
-                    </p>
-                  )}
-                </div>
-
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={profile?.name || name}
-                  //           onBlur={async (e) => {
-                  //             formik.handleBlur(e);
-                  //  const value = e.target.value;
-
-                  //             }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    formik.setFieldValue("name", value);
-                    setName(value);
-                    setProfile((prev) => ({
-                      ...prev,
-                      name: value,
-                      userName: value
-                        .toLocaleLowerCase()
-                        .trim()
-                        .replace(/\s+/g, "-"),
-                    }));
-                    setQrProfile((prev) => ({
-                      ...prev,
-                      name: value,
-                      userName: value
-                        .toLocaleLowerCase()
-                        .trim()
-                        .replace(/\s+/g, "-"),
-                    }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="اكتب اسم المنشأة هنا"
-                  required
-                />
-              </div>
-                   {/* User */}
-{role === "admin" && (
-  
-             
-              <div className="w-full mb-6">
-                <label className="block text-sm font-bold text-[#475569] mb-2 mr-1">
+                <label className="flex items-center gap-x-2 text-sm font-bold text-[#475569] mb-2 mr-1">
+                  <MdPerson size={16} className="text-slate-400" />
                   اسم العميل
                 </label>
-
                 <Select
                   options={userOptions}
-                  value={
-                    userOptions.find(
-                      (option) =>
-                        option.value === selectedUser?.id
-                    ) || null
-                  }
+                  styles={selectStyles}
+                  value={userOptions.find((o) => o.value === selectedUser?.id) || null}
                   placeholder="برجاء اختيار اسم العميل"
-                  className="font-semibold"
-                  classNamePrefix="custom-select"
+                  noOptionsMessage={() => "لا توجد نتائج"}
                   isClearable
-                  onChange={(selectedOption) => {
-                    if (!selectedOption) {
-                      setSelectedUser(null);
-                      setClientName("")
-                      return;
-                    }
-
-                    const user = users?.find(
-                      (u) => u?.id === selectedOption.value
-                    );
-
-                    setSelectedUser(user || null);
-                    setClientName(user?.name || "");
-                    setProfile((prev) => ({
-                      ...prev,
-                      clientName: user?.name,                      
-                    }));
-                    setQrProfile((prev) => ({
-                      ...prev,
-                      clientName: user?.name,                      
-                    }));
-                  }}
+                  onChange={handleClient}
                 />
               </div>
-)}
-
-              {/* نوع المنشأة */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="activity"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    نوع المنشأة
-                  </label>
-
-                  {formik.errors.activity && formik.touched.activity && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.activity}
-                    </p>
-                  )}
-                </div>
-
-                <Select
-  options={options}
-  type="text"
-                  id="activity"
-                  name="activity"
-                  value={profile?.activity || activity}
- placeholder="اكتب نوع المنشأة هنا"
-                  required
-  className="bg-[#F8FAFC] custom-select__control border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-  classNamePrefix="custom-select"
-  onChange={(selectedOption) => {
-
-                    formik.setFieldValue("activity", selectedOption);
-                    setActivity(selectedOption);
-                    setProfile((prev) => ({
-                      ...prev,
-                      activity: selectedOption,                      
-                    }));
-                    setQrProfile((prev) => ({
-                      ...prev,
-                      activity: selectedOption,                      
-                    }));
-                  }}
-/>
-
-                
-              </div>
-
-              {/* البريد الإلكتروني */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    البريد الإلكتروني
-                  </label>
-
-                  {formik.errors.email && formik.touched.email && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.email}
-                    </p>
-                  )}
-                </div>
-
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={profile?.email || email}
-                  onBlur={formik.handleBlur}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    formik.setFieldValue("email", value);
-                    setEmail(value);
-                    setProfile((prev) => ({ ...prev, email: value }));
-                    setQrProfile((prev) => ({ ...prev, email: value }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="example@email.com"
-                />
-              </div>
-
-              {/* العنوان */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="address"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    العنوان
-                  </label>
-
-                  {formik.errors.address && formik.touched.address && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.address}
-                    </p>
-                  )}
-                </div>
-
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={profile?.address || address}
-                  onBlur={formik.handleBlur}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    formik.setFieldValue("address", value);
-                    setAddress(value);
-                    setProfile((prev) => ({ ...prev, address: value }));
-                    setQrProfile((prev) => ({ ...prev, address: value }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="اكتب موقع المنشأة هنا"
-                />
-              </div>
-
-              {/* رقم الهاتف */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="phoneNumber"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    رقم الهاتف
-                  </label>
-
-                  {formik.errors.phoneNumber && formik.touched.phoneNumber && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.phoneNumber}
-                    </p>
-                  )}
-                </div>
-
-                <input
-                  type="text"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={profile?.phoneNumber || phoneNumber}
-                  onBlur={async (e) => {
-                    formik.handleBlur(e);
-
-                    if (!formik.errors.phoneNumber) {
-                      const value = e.target.value;
-
-                      if (!formik.errors.whatsappNumber) {
-                        let cleanNumber = value
-                          .replace(/\s+/g, "")
-                          .replace("+", "");
-
-                        if (cleanNumber.startsWith("01")) {
-                          cleanNumber = "20" + cleanNumber.substring(1);
-                        } else if (cleanNumber.startsWith("1")) {
-                          cleanNumber = "20" + cleanNumber;
-                        }
-
-                        const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
-
-                        setWhatsappNumber(value);
-                        setWhatsappURL(generatedWhatsAppURL);
-
-                        setQrProfile((prev) => ({
-                          ...prev,
-                          phoneNumber: value,
-                          whatsappNumber: value,
-                          whatsappURL: generatedWhatsAppURL,
-                        }));
-                      }
-
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        phoneNumber: value,
-                      }));
-                    } else {
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        phoneNumber: "",
-                      }));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    formik.setFieldValue("phoneNumber", value);
-                    setPhoneNumber(value);
-                    setProfile((prev) => ({
-                      ...prev,
-                      phoneNumber: value,
-                    }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="اكتب رقم هاتفك هنا"
-                />
-              </div>
-
-              {/* نبذة عنك */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="bio"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    نبذة عنك
-                  </label>
-
-                  {formik.errors.bio && formik.touched.bio && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.bio}
-                    </p>
-                  )}
-                </div>
-
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={profile?.bio || bio}
-                  onBlur={async (e) => {
-                    formik.handleBlur(e);
-
-                    if (!formik.errors.bio) {
-                      const value = e.target.value;
-
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        bio: value,
-                      }));
-                    } else {
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        bio: "",
-                      }));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    formik.setFieldValue("bio", value);
-                    setBio(value);
-                    setProfile((prev) => ({
-                      ...prev,
-                      bio: value,
-                    }));
-                  }}
-                  rows={3}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238,38,119,0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300 resize-none"
-                  placeholder="اكتب نبذة قصيرة عنك..."
-                />
-              </div>
-
-              {/* قائمة الطعام */}
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="menu"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    قائمة الطعام
-                  </label>
-
-                  {formik.errors.menu && formik.touched.menu && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.menu}
-                    </p>
-                  )}
-                </div>
-
-                <label
-                  htmlFor="menu"
-                  className="group flex items-center gap-x-2 w-full px-5 py-3.5 
-    bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] rounded-2xl 
-    cursor-pointer transition-all duration-300
-    hover:border-[#a53860] "
-                >
-                  <div
-                    className=" flex  rounded-2xl
-      bg-[#a53860]/10 text-[#a53860] mb-3
-      group-hover:bg-[#a53860] group-hover:text-white
-      transition-all duration-300"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-7 h-7"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 16V4m0 0L8 8m4-4l4 4M5 16.5v1A2.5 2.5 0 007.5 20h9a2.5 2.5 0 002.5-2.5v-1"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* Text */}
-                  <p className="text-sm font-bold text-[#1E293B] group-hover:text-[#a53860] transition-colors">
-                    اضغط لرفع قائمة الطعام
-                  </p>
-
-                  {/* <p className="text-xs text-[#94A3B8] mt-2">
-      PDF, JPG, JPEG أو PNG — بحد أقصى 5 ميجابايت
-    </p> */}
-
-                  <input
-                    type="file"
-                    id="menu"
-                    name="menu"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.currentTarget.files?.[0];
-
-                      if (!file) return;
-
-                      formik.setFieldValue("menu", file);
-
-                      const previewUrl = URL.createObjectURL(file);
-                      setMenuPreviewUrl(previewUrl);
-
-                      setProfile((prev) => ({
-                        ...prev,
-                        menu: previewUrl,
-                      }));
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        menu: previewUrl,
-                      }));
-                    }}
-                    onBlur={formik.handleBlur}
-                  />
-                </label>
-
-                {formik.values.menu && (
-                  <div className="flex items-center justify-between mt-3 px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-[#a53860]/10 text-[#a53860]">
-                        📄
-                      </div>
-
-                      <p className="text-sm font-semibold text-[#334155] truncate">
-                        {formik.values.menu.name}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      {/* Remove btn */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (menuPreviewUrl) {
-                            URL.revokeObjectURL(menuPreviewUrl);
-                          }
-
-                          setMenuPreviewUrl("");
-                          formik.setFieldValue("menu", null);
-                          setProfile((prev) => ({
-                            ...prev,
-                            menu: null,
-                          }));
-                        }}
-                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        إزالة
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* SECTION 3: SOCIAL MEDIA */}
-        <div className="w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 overflow-hidden transition-all duration-300 hover:border-[#a53860]/40 hover:shadow-[#a53860]/10">
-          <button
-            type="button"
-            onClick={() => toggleSection("social")}
-            className="w-full flex justify-between items-center px-6 py-5 bg-[#F8FAFC] border-b border-[#E2E8F0] hover:bg-[#F1F5F9] transition-all group"
-          >
-            <span className="font-extrabold text-lg text-[#1E293B] group-hover:text-[#a53860] transition-all duration-300">
-              ثالثاً: حسابات التواصل الاجتماعي
-            </span>
-            {openSections.social ? (
-              <HiChevronUp className="text-2xl text-[#a53860] transition-transform duration-300" />
-            ) : (
-              <HiChevronDown className="text-2xl text-[#64748B] group-hover:text-[#a53860] transition-transform duration-300" />
             )}
-          </button>
 
-          {openSections.social && (
-            <div className="p-6 flex flex-col gap-y-5">
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="facebook"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    صفحة فيسبوك
-                  </label>
-                  {formik.errors.facebookURL && formik.touched.facebookURL && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.facebookURL}
-                    </p>
-                  )}
-                </div>
-                <input
-                  type="url"
-                  id="facebookURL"
-                  name="facebookURL"
-                  value={profile.facebookURL || facebookURL}
-                  onBlur={async (e) => {
-                    formik.handleBlur(e);
-                    if (!formik.errors.facebookURL) {
-                      const value = e.target.value;
-                      setQrProfile((prev) => ({ ...prev, facebookURL: value }));
-                    } else {
-                      setQrProfile((prev) => ({ ...prev, facebookURL: "" }));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    formik.setFieldValue("facebookURL", value);
-                    setFacebookURL(value);
-                    setProfile((prev) => ({ ...prev, facebookURL: value }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238, 38, 119, 0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="https://facebook.com/username"
-                />
-              </div>
-
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="instagram"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    صفحة انستجرام
-                  </label>
-                  {formik.errors.instagramURL &&
-                    formik.touched.instagramURL && (
-                      <p className="text-red-500 text-sm text-center font-bold">
-                        {formik.errors.instagramURL}
-                      </p>
-                    )}
-                </div>
-                <input
-                  type="url"
-                  id="instagramURL"
-                  name="instagramURL"
-                  value={profile.instagramURL || instagramURL}
-                  onBlur={async (e) => {
-                    formik.handleBlur(e);
-                    if (!formik.errors.instagramURL) {
-                      const value = e.target.value;
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        instagramURL: value,
-                      }));
-                    } else {
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        instagramURL: "",
-                      }));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    formik.setFieldValue("instagramURL", value);
-                    setInstagramURL(value);
-                    setProfile((prev) => ({ ...prev, instagramURL: value }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238, 38, 119, 0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="https://instagram.com/username"
-                />
-              </div>
-
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="tiktok"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    صفحة تيك توك
-                  </label>
-                  {formik.errors.tiktokURL && formik.touched.tiktokURL && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.tiktokURL}
-                    </p>
-                  )}
-                </div>
-                <input
-                  type="url"
-                  id="tiktokURL"
-                  name="tiktokURL"
-                  value={profile.tiktokURL || tiktokURL}
-                  onBlur={async (e) => {
-                    formik.handleBlur(e);
-                    if (!formik.errors.tiktokURL) {
-                      const value = e.target.value;
-                      setQrProfile((prev) => ({ ...prev, tiktokURL: value }));
-                    } else {
-                      setQrProfile((prev) => ({ ...prev, tiktokURL: "" }));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    formik.setFieldValue("tiktokURL", value);
-                    setTiktokURL(value);
-                    setProfile((prev) => ({ ...prev, tiktokURL: value }));
-                  }}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238, 38, 119, 0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300"
-                  placeholder="https://tiktok.com/@username"
-                />
-              </div>
-
-              <div className="w-full">
-                <div className="flex items-center gap-x-5 mb-2">
-                  <label
-                    htmlFor="whatsappNumber"
-                    className="block text-sm font-bold text-[#475569] mr-1"
-                  >
-                    تواصل عبر واتساب
-                  </label>
-                  {formik.errors.whatsappURL && formik.touched.whatsappURL && (
-                    <p className="text-red-500 text-sm text-center font-bold">
-                      {formik.errors.whatsappURL}
-                    </p>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  id="whatappNumber"
-                  name="whatappNumber"
-                  value={profile?.whatsappNumber || whatsappNumber}
-                  onBlur={(e) => {
-                    formik.handleBlur(e);
-                    if (!formik.errors.whatsappNumber) {
-                      const value = e.target.value;
-                      let cleanNumber = value
-                        .replace(/\s+/g, "")
-                        .replace("+", "");
-                      if (cleanNumber.startsWith("01")) {
-                        cleanNumber = "20" + cleanNumber.substring(1);
-                      } else if (cleanNumber.startsWith("1")) {
-                        cleanNumber = "20" + cleanNumber;
-                      }
-                      const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        whatsappNumber: value,
-                        whatsappURL: generatedWhatsAppURL,
-                      }));
-                    } else {
-                      setQrProfile((prev) => ({
-                        ...prev,
-                        whatsappNumber: "",
-                        whatsappURL: "",
-                      }));
-                    }
-                  }}
-                  onChange={(e) => {
-  const value = e.target.value;
-
-  setWhatsappNumber(value);
-  formik.setFieldValue("whatsappNumber", value);
-
-  // If WhatsApp number is empty, clear everything
-  if (!value.trim()) {
-    setWhatsappURL("");
-    setProfile((prev) => ({
-      ...prev,
-      whatsappNumber: "",
-      whatsappURL: "",
-    }));
-
-    setQrProfile((prev) => ({
-      ...prev,
-      whatsappNumber: "",
-      whatsappURL: "",
-    }));
-
-    return;
-  }
-
-  let cleanNumber = value
-    .replace(/\s+/g, "")
-    .replace("+", "");
-
-  if (cleanNumber.startsWith("01")) {
-    cleanNumber = "20" + cleanNumber.substring(1);
-  } else if (cleanNumber.startsWith("1")) {
-    cleanNumber = "20" + cleanNumber;
-  }
-
-  const generatedWhatsAppURL = `https://wa.me/${cleanNumber}`;
-
-  setWhatsappURL(generatedWhatsAppURL);
-
-  setProfile((prev) => ({
-    ...prev,
-    whatsappNumber: value,
-    whatsappURL: generatedWhatsAppURL,
-  }));
-}}
-                  className="bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] text-md font-medium rounded-xl focus:bg-white focus:border-[#a53860] focus:shadow-[0_0_15px_rgba(238, 38, 119, 0.15)] block w-full px-5 py-3.5 placeholder:text-[#94A3B8] focus:outline-none transition-all duration-300 text-right"
-                  placeholder="201234567890"
-                />
-              </div>
+            <div className="w-full" data-error={formik.errors.activity && formik.touched.activity ? "true" : undefined}>
+              <label className="flex items-center gap-x-2 text-sm font-bold text-[#475569] mb-2 mr-1">
+                <MdCategory size={16} className="text-slate-400" />
+                نوع المنشأة
+              </label>
+              <Select
+                inputId="activity"
+                options={options}
+                styles={selectStyles}
+                value={v.activity}
+                placeholder="اختر نوع المنشأة"
+                noOptionsMessage={() => "لا توجد نتائج"}
+                onChange={handleActivity}
+              />
             </div>
-          )}
-        </div>
 
-        <div className="w-full flex justify-between items-center px-5 pb-5">
-          <div
-            onClick={() => submitProfilePage(formik.values)}
-            className={`w-[60%] lg:w-[25%] flex justify-center items-center gap-x-3 ${qrProfile.name.length === 0 ? "bg-[#fa518f]/75 cursor-not-allowed" : "bg-[#fa518f] hover:bg-[#fa518f]/75"} bg-[length:200%_auto] hover:bg-right transition-all duration-500 px-4 py-3 text-white rounded-xl shadow-lg shadow-[#4c956c]/20 font-bold tracking-wide active:scale-95`}
-          >
-            {loadingProfile ? (
-              <span className="loader"></span>
-            ) : (
-              <button
-              disabled={loadingProfile}
-                className={`${qrProfile.name.length === 0 ? "cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                انشاء الصفحة
-              </button>
-            )}
-            <FaLongArrowAltLeft />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <TextField
+                {...fieldProps("phoneNumber")}
+                label="رقم الهاتف"
+                icon={FaPhoneAlt}
+                type="tel"
+                dir="ltr"
+                className="text-left"
+                placeholder="01012345678"
+              />
+              <TextField
+                {...fieldProps("email")}
+                label="البريد الإلكتروني"
+                icon={MdEmail}
+                type="email"
+                dir="ltr"
+                className="text-left"
+                placeholder="example@email.com"
+              />
+            </div>
+
+            <TextField
+              {...fieldProps("address")}
+              label="العنوان"
+              icon={MdLocationOn}
+              required
+              placeholder="اكتب موقع المنشأة هنا"
+            />
+
+            <TextField
+              {...fieldProps("bio")}
+              label="نبذة عنك"
+              multiline
+              maxLength={500}
+              placeholder="اكتب نبذة قصيرة عنك..."
+            />
           </div>
-          <div
-            onClick={async () => await handleCancel()}
-            className="w-[35%] lg:w-[20%] flex justify-center items-center gap-x-3 bg-gray-600 hover:bg-gray-600/75 bg-[length:200%_auto] hover:bg-right transition-all duration-500 px-4 py-3 text-white rounded-xl shadow-lg shadow-[#4c956c]/20 font-bold tracking-wide active:scale-95"
-          >
-            <button>الغاء</button>
-            <IoClose />
+        </Section>
+
+        <Section
+          icon={MdRestaurantMenu}
+          title="قائمة الطعام"
+          subtitle="ارفع صور أو ملفات PDF لقائمتك"
+          open={openSections.menu}
+          onToggle={() => toggleSection("menu")}
+          errorCount={errorCount("menu")}
+        >
+          <div data-error={formik.errors.menuEntries && formik.touched.menuEntries ? "true" : undefined}>
+            <MenuUploader entries={v.menuEntries} onChange={handleMenuChange} />
+            {formik.errors.menuEntries && formik.touched.menuEntries && (
+              <p className="flex items-center gap-x-1 text-red-500 text-xs font-bold mt-1.5 mr-1">
+                <MdErrorOutline size={14} />
+                {formik.errors.menuEntries}
+              </p>
+            )}
+          </div>
+        </Section>
+
+        <Section
+          icon={MdShare}
+          title="حسابات التواصل الاجتماعي"
+          subtitle="وسائل الوصول لمنشأتك "
+          open={openSections.social}
+          onToggle={() => toggleSection("social")}
+          errorCount={errorCount("social")}
+        >
+          <div className="flex flex-col gap-y-5">
+            {socials.map(({ key, label, icon, placeholder }) => (
+              <TextField
+                key={key}
+                {...fieldProps(key)}
+                label={label}
+                icon={icon}
+                type="url"
+                dir="ltr"
+                className="text-left"
+                placeholder={placeholder}
+              />
+            ))}
+
+            <TextField
+              id="whatsappNumber"
+              value={v.whatsappNumber}
+              error={formik.errors.whatsappNumber}
+              touched={formik.touched.whatsappNumber}
+              onBlur={formik.handleBlur}
+              onChange={(e) => applyWhatsapp(e.target.value)}
+              label="تواصل عبر واتساب"
+              icon={FaWhatsapp}
+              type="tel"
+              dir="ltr"
+              className="text-left"
+              placeholder="01012345678"
+              action={
+                v.phoneNumber &&
+                !formik.errors.phoneNumber &&
+                v.phoneNumber !== v.whatsappNumber ? (
+                  <button
+                    type="button"
+                    onClick={() => applyWhatsapp(v.phoneNumber)}
+                    className="text-xs font-bold text-[#a53860] hover:underline"
+                  >
+                    استخدم رقم الهاتف
+                  </button>
+                ) : null
+              }
+            />
+          </div>
+        </Section>
+
+        <div className="sticky bottom-4 z-20">
+          <div className="w-full flex flex-wrap items-center justify-between gap-3 bg-white/90 backdrop-blur border border-[#E2E8F0] rounded-2xl shadow-2xl shadow-[#a53860]/10 px-4 py-3">
+            
+
+           <div className="w-full flex justify-between items-center">
+              
+               
+              <button
+                type="submit"
+                disabled={saving}
+                className={`w-[60%] lg:w-[25%] flex justify-center items-center gap-x-3 ${qrProfile.name.length === 0 ? "bg-[#fa518f]/75 cursor-not-allowed" : "bg-[#fa518f] hover:bg-[#fa518f]/75"} bg-[length:200%_auto] hover:bg-right transition-all duration-500 px-4 py-3 text-white rounded-xl shadow-lg shadow-[#4c956c]/20 font-bold tracking-wide active:scale-95`}
+              >
+                {saving ? (
+                  <span className="loader"></span>
+                ) : (
+                  <>
+                    إنشاء الصفحة
+                    <FaLongArrowAltLeft />
+                  </>
+                )}
+              </button>
+
+               <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={saving}
+                  className="w-[35%] lg:w-[20%] flex justify-center items-center gap-x-3 bg-gray-600 hover:bg-gray-600/75 bg-[length:200%_auto] hover:bg-right transition-all duration-500 px-4 py-3 text-white rounded-xl shadow-lg shadow-[#4c956c]/20 font-bold tracking-wide active:scale-95"
+                >
+                  <MdUndo size={18} />
+                  إلغاء
+                </button>
+              
+            </div>
           </div>
         </div>
       </form>

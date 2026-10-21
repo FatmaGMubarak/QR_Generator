@@ -27,6 +27,7 @@ import { FiDollarSign } from "react-icons/fi";
 import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
 
 import { fetchUsers } from "../../store/reducers/auth/authSlice";
+import { MdUndo } from "react-icons/md";
 
 export default function AdminCreateSubscription() {
   const [name, setName] = useState("");
@@ -125,7 +126,7 @@ export default function AdminCreateSubscription() {
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  px-4 py-10 selection:bg-[#FFD600] selection:text-[#1E293B]">
       <form
         onSubmit={handleSubmit}
-        className="w-full lg:w-[50%] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 p-8 flex flex-col items-center gap-y-7 mt-[20%] md:mt-[7%] lg:mt-[7%]"
+        className="w-full lg:w-[50%] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 p-8 flex flex-col items-center gap-y-7 mt-[20%] md:mt-[7%] lg:mt-[6%]"
       >
         <div className="text-center">
           <h1 className="font-extrabold text-xl text-[#1E293B]">
@@ -348,8 +349,8 @@ export default function AdminCreateSubscription() {
 
               bg-gray-600/90 hover:bg-gray-600`}
           >
-            الغاء
-            <X />
+            <MdUndo size={18} />
+            إلغاء
           </button>
         </div>
       </form>

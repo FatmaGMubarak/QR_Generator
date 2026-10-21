@@ -9,6 +9,7 @@ import AnalyzingImageDemo from "../../components/common/AnalyzingImageDemo";
 import { fetchUsers } from "../../store/reducers/auth/authSlice";
 import Select from "react-select";
 import { HandCoins } from "lucide-react";
+import { MdUndo } from "react-icons/md";
 
 
 export default function AdminDisplaySubscription() {
@@ -139,7 +140,7 @@ useEffect(() => {
       >
         <form
           onSubmit={handleSubmit}
-          className="w-full lg:w-[50%] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 p-8 flex flex-col items-center gap-y-7 mt-[20%] md:mt-[7%] lg:mt-[7%]"
+          className="w-full lg:w-[50%] bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-[#a53860]/5 p-8 flex flex-col items-center gap-y-7 mt-[20%] md:mt-[7%] lg:mt-[6%]"
         >
         {/* Header */}
         <div className="text-center border-b border-slate-100 pb-6">
@@ -321,8 +322,8 @@ useEffect(() => {
             type="button"
             className="w-full flex justify-center items-center gap-x-2 px-4 py-3 rounded-xl text-slate-600 text-sm font-bold bg-slate-100 hover:bg-slate-200 transition-all duration-200 active:scale-[0.98]"
           >
+            <MdUndo size={18} />
             إلغاء
-            <FiX size={16} />
           </button>
         </div>
       </form>

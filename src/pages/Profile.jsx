@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
-import cover from "../assets/pietro-de-grandi-T7K4aEPoGGk-unsplash.jpg";
-import avatar from "../assets/avatar.png";
-import { FaFacebook } from "react-icons/fa";
+import { useParams, Link } from "react-router-dom";
+import { FaFacebook, FaPhone } from "react-icons/fa";
 import { BiLogoInstagramAlt } from "react-icons/bi";
 import { SiTiktok } from "react-icons/si";
 import { IoLogoWhatsapp } from "react-icons/io";
-import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
+import { MdKeyboardDoubleArrowLeft, MdImageNotSupported } from "react-icons/md";
 import { FaUserLarge } from "react-icons/fa6";
-import { getDoc, doc, query, collection, where, getDocs } from "firebase/firestore";
-import { db } from "../services/firebase";
-import whatappLogo from '../assets/whatappLogo.png'
-import facebookLogo from '../assets/facebookLogo.png'
-import instagramLogo from '../assets/instagramLogo.png'
-import tiktokLogo from '../assets/tik-tokLogo.png'
-import { FaPhone } from "react-icons/fa";
-import { MdImageNotSupported } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import {fetchProfileById} from '../store/reducers/profileSlice.js'
-import { HomeIcon, Mail, Phone, ExternalLink, MenuSquare, SearchX } from "lucide-react";
+import { fetchProfileById } from "../store/reducers/profileSlice.js";
+import { HomeIcon, Mail, SearchX, MenuSquare, ExternalLink } from "lucide-react";
+import { fetchCategories } from "../store/reducers/categorySlice.js";
 
 function ProfileNotFound({ slug }) {
   return (
@@ -30,20 +21,16 @@ function ProfileNotFound({ slug }) {
         <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-[#880d1e]/10 to-[#2f6647]/10 ring-4 ring-[#4c956c]/15">
           <SearchX className="w-11 h-11 text-[#880d1e]" strokeWidth={1.75} />
         </div>
-
         <p className="mt-6 text-7xl sm:text-8xl font-extrabold leading-none tracking-tight bg-gradient-to-r from-[#880d1e] to-[#2f6647] bg-clip-text text-transparent select-none">
           404
         </p>
-
         <h1 className="mt-4 text-2xl sm:text-3xl font-extrabold text-[#1e293b]">
           الصفحة غير موجودة
         </h1>
-
-        <p className="mt-3 text-[15px] font-medium text-[#64748B] leading-relaxed max-w-sm">
+        <p className="mt-3 text-[15px] font-medium text-[#64748B] leading-relaxed max-w-md">
           عذرًا، لم نتمكن من العثور على الصفحة التي تبحث عنها. ربما تم تغيير
           الرابط أو حذف الصفحة، أو أن الرابط غير صحيح.
         </p>
-
         {slug && (
           <div
             dir="ltr"
@@ -52,7 +39,6 @@ function ProfileNotFound({ slug }) {
             /{slug}
           </div>
         )}
-
         <div className="mt-8 w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
           <Link
             to="/"
@@ -69,27 +55,28 @@ function ProfileNotFound({ slug }) {
 
 export default function Profile() {
   const [profileNoToken, setProfileNoToken] = useState(null);
-  const [fbLoading, setFbLoading] = useState(false);
-  // "loading" | "found" | "notFound"
   const [fetchStatus, setFetchStatus] = useState("loading");
+  const [menuPage, setMenuPage] = useState(1);
+  const ITEMS_PER_PAGE = 4;
+
   const token = useSelector((state) => state?.auth?.token);
-  const authInitialized = useSelector((state) => state?.auth?.initialized);
   const profile = useSelector((state) => state?.profile?.profile);
   const backendLoading = useSelector((state) => state?.profile?.loading);
   const { slug } = useParams();
   const dispatch = useDispatch();
+  const categories = useSelector((state)=> state?.category?.categories);
 
+  useEffect(()=>{
+    dispatch(fetchCategories());
+  }, [dispatch])
   useEffect(() => {
     if (!slug) return;
-
     let cancelled = false;
     setFetchStatus("loading");
-
     dispatch(fetchProfileById(slug))
       .unwrap()
       .then((result) => {
         if (cancelled) return;
-        // An empty response also means the slug doesn't match any profile
         setFetchStatus(result ? "found" : "notFound");
       })
       .catch((err) => {
@@ -97,14 +84,12 @@ export default function Profile() {
         console.warn("Backend fetch failed, falling back to Firebase:", err);
         setFetchStatus("notFound");
       });
-
     return () => {
       cancelled = true;
     };
   }, [dispatch, slug]);
 
-  const loading =
-    fetchStatus === "loading" || (token ? backendLoading : fbLoading);
+  const loading = fetchStatus === "loading" || (token ? backendLoading : false);
 
   const displayName = profile?.name ?? profileNoToken?.name;
   const displayCover = profile?.cover ?? profileNoToken?.coverURL;
@@ -118,6 +103,7 @@ export default function Profile() {
   const displayInstagram = profile?.instagram ?? profileNoToken?.instagramURL;
   const displayTiktok = profile?.tiktok ?? profileNoToken?.tiktokURL;
   const displayWhatsapp = profile?.whatsapp ?? profileNoToken?.whatsappURL;
+  const displayActivity = categories?.find((cat)=>cat?.id === profile?.activity_id);
 
   const socialLinks = [
     displayFacebook && {
@@ -161,7 +147,7 @@ export default function Profile() {
     },
     displayPhone && {
       key: "phone",
-      icon: Phone,
+      icon: FaPhone,
       href: `tel:${displayPhone}`,
       text: displayPhone,
     },
@@ -173,7 +159,18 @@ export default function Profile() {
     },
   ].filter(Boolean);
 
-  // Invalid slug: nothing came back from the backend and no fallback data exists
+  const menuList = Array.isArray(displayMenu)
+    ? displayMenu
+    : displayMenu
+    ? [displayMenu]
+    : [];
+
+  const totalPages = Math.ceil(menuList.length / ITEMS_PER_PAGE);
+  const paginatedMenu = menuList.slice(
+    (menuPage - 1) * ITEMS_PER_PAGE,
+    menuPage * ITEMS_PER_PAGE
+  );
+
   if (!loading && fetchStatus === "notFound" && !profileNoToken) {
     return <ProfileNotFound slug={slug} />;
   }
@@ -186,14 +183,12 @@ export default function Profile() {
           100% { transform: scale(1.8); opacity: 0; }
         }
       `}</style>
-
       {loading && (
         <div className="relative w-16 h-16 flex items-center justify-center">
           <span className="absolute inset-0 rounded-full bg-white/70 animate-[splash-ring_1.1s_ease-out_infinite]" />
           <span className="relative w-8 h-8 rounded-full bg-white shadow-md" />
         </div>
       )}
-
       <div
         dir="rtl"
         className={`w-full max-w-2xl bg-white/90 backdrop-blur-xl rounded-[28px] shadow-2xl shadow-black/10 border border-white/60 overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
@@ -214,9 +209,6 @@ export default function Profile() {
               <MdImageNotSupported className="text-6xl text-gray-300" />
             </div>
           )}
-
-          {/* <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/95 to-transparent" /> */}
-
           <div
             className={`absolute left-1/2 -bottom-14 -translate-x-1/2 w-32 h-32 rounded-full bg-white p-1.5 shadow-xl transition-all duration-700 delay-150 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
               !loading ? "opacity-100 scale-100" : "opacity-0 scale-50"
@@ -246,6 +238,12 @@ export default function Profile() {
             {displayName}
           </h1>
 
+          {displayActivity && (
+            <span className="mt-1.5 px-3 py-1 rounded-full bg-[#4c956c]/10 text-[#2f6647] font-bold text-xs">
+              {displayActivity?.name}
+            </span>
+          )}
+
           {displayAbout && (
             <p
               className={`mt-2 font-medium text-[15px] text-center text-[#64748B] max-w-md leading-relaxed transition-all duration-700 delay-[400ms] ease-out ${
@@ -258,13 +256,13 @@ export default function Profile() {
 
           {contactRows.length > 0 && (
             <div
-              className={`mt-5 w-full flex flex-col items-stretch gap-2 max-w-sm transition-all duration-700 delay-[450ms] ease-out ${
+              className={`mt-5 w-full flex flex-col items-stretch gap-2 max-w-md transition-all duration-700 delay-[450ms] ease-out ${
                 !loading ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               }`}
             >
               {contactRows.map(({ key, icon: Icon, href, text }) => {
                 const content = (
-                  <div className=" flex items-center gap-x-3 w-full px-4 py-2.5 rounded-xl bg-[#F8FAFC] border border-gray-300">
+                  <div className="flex items-center gap-x-3 w-full px-4 py-2.5 rounded-xl bg-[#F8FAFC] border border-gray-300">
                     <span className="flex items-center border border-gray-200 justify-center w-8 h-8 rounded-lg bg-gray-100 text-[#397a55] shadow-2xl shrink-0">
                       <Icon className="text-base" />
                     </span>
@@ -276,7 +274,6 @@ export default function Profile() {
                     </span>
                   </div>
                 );
-
                 return href ? (
                   <a
                     key={key}
@@ -292,18 +289,84 @@ export default function Profile() {
             </div>
           )}
 
-          {/* {displayMenu && (
-            <a
-              href={displayMenu}
-              className={`mt-5 w-full max-w-sm flex items-center justify-center gap-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-[#a53860] to-[#880d1e] text-white font-bold text-sm shadow-lg shadow-[#a53860]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl ${
-                !loading ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              }`}
-            >
-              <MenuSquare className="text-lg" />
-              عرض المنيو
-              <MdKeyboardDoubleArrowLeft className="text-xl" />
-            </a>
-          )} */}
+          {/* Paginated Menu Gallery Section */}
+          {menuList.length > 0 && (
+            <div className="mt-5 w-full max-w-md flex flex-col items-stretch gap-3">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-[#475569] flex items-center gap-x-1.5">
+                  <MenuSquare className="w-4 h-4 text-[#880d1e]" />
+                  قائمة الطعام / المنيو
+                </span>
+                <span className="text-xs text-gray-400 font-medium">
+                  {menuList.length} عناصر
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {paginatedMenu.map((mItem, idx) => {
+                  const itemUrl = typeof mItem === "string" ? mItem : mItem?.url;
+                  const itemName = typeof mItem === "object" && mItem?.name ? mItem.name : `منيو ${idx + 1}`;
+                  const isPdf = /\.pdf$/i.test(itemUrl || "");
+                  if (!itemUrl) return null;
+
+                  return (
+                    <a
+                      key={idx}
+                      href={itemUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-[#F8FAFC] border border-gray-300 hover:border-[#a53860] transition-all duration-300 overflow-hidden shadow-sm"
+                    >
+                      {isPdf ? (
+                        <div className="w-full h-24 flex flex-col items-center justify-center bg-gray-100 rounded-lg text-[#880d1e]">
+                          <MenuSquare className="w-8 h-8 mb-1" />
+                          <span className="text-[11px] font-bold">ملف PDF</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-28 rounded-lg overflow-hidden bg-gray-100 relative">
+                          <img
+                            src={itemUrl}
+                            alt={itemName}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center justify-between w-full px-1">
+                        <span className="text-xs font-medium text-[#475569] truncate w-full text-right">
+                          {itemName}
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 shrink-0 mr-1" />
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setMenuPage((p) => Math.max(p - 1, 1))}
+                    disabled={menuPage === 1}
+                    className="px-3 py-1 rounded-lg bg-[#F8FAFC] border border-gray-300 text-xs font-bold text-[#475569] disabled:opacity-40 hover:bg-gray-100 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    السابق
+                  </button>
+                  <span className="text-xs font-bold text-[#475569]">
+                    {menuPage} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMenuPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={menuPage === totalPages}
+                    className="px-3 py-1 rounded-lg bg-[#F8FAFC] border border-gray-300 text-xs font-bold text-[#475569] disabled:opacity-40 hover:bg-gray-100 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    التالي
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {socialLinks.length > 0 && (
             <div
@@ -315,12 +378,12 @@ export default function Profile() {
                 <a
                   key={key}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`flex gap-x-1 items-center justify-center gap-y-1.5 px-3 py-3.5 rounded-xl font-bold text-xs shadow-md transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] active:scale-95 ${className}`}
                 >
                   <Icon className="text-xl" />
-                  <span className="flex items-center gap-x-1">
-                    {label}
-                  </span>
+                  <span className="flex items-center gap-x-1">{label}</span>
                 </a>
               ))}
             </div>

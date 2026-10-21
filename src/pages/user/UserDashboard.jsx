@@ -141,7 +141,7 @@ export default function UserDashboard() {
       {/* <div className="w-full h-full mt-[7%]">
         <CategorySlideshow />
       </div> */}
-      <div className="w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[7%]">
+      <div className="w-full flex flex-col gap-y-2 justify-center items-center mt-[20%] md:mt-[7%] lg:mt-[6%]">
         <h1 className="text-lg sm:text-2xl font-bold mb-2 mt-1">المنشآت الشخصية</h1>
         <Search onSearch={setSearchQuery} />
         <CategoriesListing

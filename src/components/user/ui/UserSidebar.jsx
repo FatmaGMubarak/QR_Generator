@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -42,7 +42,24 @@ export default function UserSidebar() {
 
   const navigate = useNavigate();
 
+    useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      }
+      else{
+        setIsSidebarOpen(true);
+      }
+    };
   
+    handleResize();
+  
+    window.addEventListener("resize", handleResize);
+  
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [setIsSidebarOpen]);
   
     const user = ssUser ?? storedUser;
 
@@ -91,7 +108,7 @@ export default function UserSidebar() {
 
       <aside
         className={`
-          fixed z-50 top-0 right-0 h-screen w-64 flex flex-col justify-between p-4
+          fixed z-[100] top-0 right-0 h-screen w-64 flex flex-col justify-between p-4
           bg-[#4c956c] backdrop-blur-md border-l border-white/30 shadow-xl
           transition-all duration-500 ease-in-out
           ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}

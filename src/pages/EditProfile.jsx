@@ -65,38 +65,38 @@ useEffect(() => {
 
   setMenuPreviewUrl(storedProfile?.menu || "")
 
-  setProfile({
-    name: storedProfile?.name || "",
-    userName: storedProfile?.slug || "",
-    bio: storedProfile?.about_us || "",
-    email: storedProfile?.email || "",
-    address: storedProfile?.address || "",
-    menu: storedProfile?.menu || "",
-    phoneNumber: storedProfile?.phone || "",
-    facebookURL: storedProfile?.facebook || "",
-    instagramURL: storedProfile?.instagram || "",
-    tiktokURL: storedProfile?.tiktok || "",
-    whatsappNumber: storedProfile?.whatsapp ? storedProfile.whatsapp.slice(15) : "",
-    whatsappURL: storedProfile?.whatsapp || "",
-    logoURL: storedProfile?.logo || "",
-    coverURL: storedProfile?.cover || "",
-  });
-  setQrProfile({
-    name: storedProfile?.name || "",
-    userName: storedProfile?.slug || "",
-    bio: storedProfile?.about_us || "",
-    email: storedProfile?.email || "",
-    address: storedProfile?.address || "",
-    menu: storedProfile?.menu || "",
-    phoneNumber: storedProfile?.phone || "",
-    facebookURL: storedProfile?.facebook || "",
-    instagramURL: storedProfile?.instagram || "",
-    tiktokURL: storedProfile?.tiktok || "",
-    whatsappNumber: storedProfile?.whatsapp ? storedProfile.whatsapp.slice(15) : "",
-    whatsappURL: storedProfile?.whatsapp || "",
-    logoURL: storedProfile?.logo || "",
-    coverURL: storedProfile?.cover || "",
-  });
+  // setProfile({
+  //   name: storedProfile?.name || "",
+  //   userName: storedProfile?.slug || "",
+  //   bio: storedProfile?.about_us || "",
+  //   email: storedProfile?.email || "",
+  //   address: storedProfile?.address || "",
+  //   menu: storedProfile?.menu || "",
+  //   phoneNumber: storedProfile?.phone || "",
+  //   facebookURL: storedProfile?.facebook || "",
+  //   instagramURL: storedProfile?.instagram || "",
+  //   tiktokURL: storedProfile?.tiktok || "",
+  //   whatsappNumber: storedProfile?.whatsapp ? storedProfile.whatsapp.slice(15) : "",
+  //   whatsappURL: storedProfile?.whatsapp || "",
+  //   logoURL: storedProfile?.logo || "",
+  //   coverURL: storedProfile?.cover || "",
+  // });
+  // setQrProfile({
+  //   name: storedProfile?.name || "",
+  //   userName: storedProfile?.slug || "",
+  //   bio: storedProfile?.about_us || "",
+  //   email: storedProfile?.email || "",
+  //   address: storedProfile?.address || "",
+  //   menu: storedProfile?.menu || "",
+  //   phoneNumber: storedProfile?.phone || "",
+  //   facebookURL: storedProfile?.facebook || "",
+  //   instagramURL: storedProfile?.instagram || "",
+  //   tiktokURL: storedProfile?.tiktok || "",
+  //   whatsappNumber: storedProfile?.whatsapp ? storedProfile.whatsapp.slice(15) : "",
+  //   whatsappURL: storedProfile?.whatsapp || "",
+  //   logoURL: storedProfile?.logo || "",
+  //   coverURL: storedProfile?.cover || "",
+  // });
 }, [storedProfile]);
 
 
@@ -148,7 +148,7 @@ useEffect(() => {
     }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-r  from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  p-6 flex flex-col lg:flex-row gap-3 justify-between items-start">
+    <div className="w-full min-h-screen bg-gradient-to-r  from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  p-6 flex flex-col lg:flex-row gap-3 justify-between items-start mt-[20%] md:mt-[7%] lg:mt-[6%]">
       {/* Right Section */}
       <div className="w-full lg:w-[65%] bg-white/70 backdrop-blur-md rounded-3xl shadow-xl shadow-sky-900/5 border border-white/80 overflow-hidden">
         <div className="pt-12">

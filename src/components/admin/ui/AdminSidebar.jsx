@@ -94,6 +94,25 @@ export default function AdminSidebar() {
     navigate("/profile");
   };
 
+  useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    else{
+      setIsSidebarOpen(true);
+    }
+  };
+
+  handleResize();
+
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, [setIsSidebarOpen]);
+
   const handleLogout = async () => {
     try {
       if (!token) return;
@@ -119,7 +138,7 @@ export default function AdminSidebar() {
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="فتح القائمة"
-        className="lg:hidden fixed top-4 right-0 z-[60] w-10 h-10 rounded-full bg-[#ff8fa3] text-white flex items-center justify-center shadow-lg"
+        className="lg:hidden fixed top-4 right-0 z-[100] w-10 h-10 rounded-full bg-[#ff8fa3] text-white flex items-center justify-center shadow-lg"
       >
         <Menu size={20} strokeWidth={2} />
       </button>
@@ -131,7 +150,7 @@ export default function AdminSidebar() {
       )}
       <aside
         className={`
-        fixed z-50 top-0 right-0 h-screen w-64 flex flex-col justify-between p-4
+        fixed z-[100] top-0 right-0 h-screen w-64 flex flex-col justify-between p-4
         bg-[#4c956c] backdrop-blur-md border-l border-white/30 shadow-xl
         transition-all duration-500 ease-in-out
         ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}

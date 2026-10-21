@@ -26,6 +26,7 @@ import avatar from "../assets/avatar.png";
 import notify from "../hooks/Notifications.js";
 import AdminTopbar from "../components/admin/ui/AdminTopbar.jsx";
 import DeleteModal from "../components/common/DeleteModal.jsx";
+import MenuGallery from "../components/common/MenuGallery.jsx";
 
 export default function DisplayProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,7 +99,7 @@ export default function DisplayProfile() {
     {(role !== "Admin" && role !== 'user') && <AdminTopbar />}
     <div
       dir="rtl"
-      className="min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-6 sm:px-6 lg:px-8  mt-[20] md:mt-[7%]"
+      className="min-h-screen bg-gradient-to-r from-[#ffafcc] via-[#ff8fa3] to-[#4c956c] px-4 py-6 sm:px-6 lg:px-8  mt-[20] md:mt-[6%]"
     >
       <div className="max-w-6xl mx-auto">
 
@@ -357,40 +358,37 @@ export default function DisplayProfile() {
             {profile?.menu && (
               <div
                 className="
+                w-full
                 bg-white
                   mt-5
                   border border-gray-200
                   rounded-xl
                   px-5 py-4
                   flex flex-col sm:flex-row
-                  sm:items-center
-                  sm:justify-between
                   gap-4
                   hover:border-orange-200
                   transition-colors duration-200
                 "
               >
 
-                <div className="flex items-center gap-3">
 
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  {/* <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                     <Utensils
                       size={19}
                       className="text-orange-600"
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <h3 className="font-bold text-gray-800">
-                      القائمة الإلكترونية
+                       المنيو
                     </h3>
 
                     <p className="text-xs text-gray-400 mt-0.5">
                       رابط القائمة الخاصة بك
                     </p>
-                  </div>
-
-                </div>
+                  </div> */}
+<MenuGallery menu={profile?.menu} />
 
 
                 {/* <a
@@ -510,7 +508,7 @@ function SocialItem({
         border border-gray-200
         bg-white
         hover:bg-gray-50
-        hover:border-gray-300
+        hover:-translate-y-0.5 hover:border-[#a53860]/40 hover:shadow-md
         transition-all duration-200
       "
     >

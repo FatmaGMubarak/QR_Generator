@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCategories, updateCategory } from "../../store/reducers/categorySlice";
 import notify from "../../hooks/Notifications";
 import { useNavigate, useParams } from "react-router-dom";
+import { MdUndo } from "react-icons/md";
 
 export default function AdminEditCategory() {
   const { id } = useParams();
@@ -225,8 +226,8 @@ export default function AdminEditCategory() {
             className={`w-full flex justify-center items-center gap-x-3 px-4 py-3.5 rounded-xl text-white font-bold tracking-wide transition-all duration-300 active:scale-95
               bg-gray-600/90 hover:bg-gray-600`}
           >
-            الغاء
-            <X />
+            <MdUndo size={18} />
+            إلغاء
           </button>
         </div>
       </form>

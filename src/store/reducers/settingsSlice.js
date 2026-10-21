@@ -13,7 +13,7 @@ export const fetchSettings = createAsyncThunk(
   "settings/fetchSettings",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("/settings");
+      const response = await api.get("/api/settings");
       return response.data?.data ?? response.data;
     } catch (err) {
       return rejectWithValue(
@@ -33,7 +33,7 @@ export const createSettings = createAsyncThunk(
                     Authorization: `Bearer ${token}`
                 }
             }
-      const response = await api.post("/settings", config, formData);
+      const response = await api.post("/api/settings", config, formData);
       return response.data;
     } catch (err) {
       return rejectWithValue(
@@ -47,7 +47,7 @@ export const updateSettings = createAsyncThunk(
   "settings/updateSettings",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await api.post("/settings/update", formData);
+      const response = await api.post("/api/settings/update", formData);
       return response.data;
     } catch (err) {
       return rejectWithValue(

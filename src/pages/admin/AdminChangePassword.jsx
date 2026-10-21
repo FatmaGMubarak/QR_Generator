@@ -21,6 +21,7 @@ import {
 import notify from "../../hooks/Notifications";
 
 import Select from "react-select";
+import { MdUndo } from "react-icons/md";
 
 const changePasswordSchema = Yup.object({
   password: Yup.string()
@@ -293,7 +294,8 @@ export default function AdminChangePassword() {
                   onClick={handleCancel}
                   className="w-[35%] lg:w-[20%] flex justify-center items-center gap-x-3 bg-gray-600/75 hover:bg-gray-600 transition-all duration-300 px-4 py-3 text-white rounded-xl shadow-lg shadow-gray-600/20 font-bold tracking-wide active:scale-95"
                 >
-                  إلغاء
+                  <MdUndo size={18} />
+                 إلغاء
                 </button>
               </div>
             </form>

@@ -99,7 +99,7 @@ export default function Home() {
 
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-r  from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  p-6 flex flex-col lg:flex-row gap-3 justify-between items-start mt-[20%] md:mt-[7%] lg:mt-[7%]">
+    <div className="w-full min-h-screen bg-gradient-to-r  from-[#ffafcc] via-[#ff8fa3] to-[#4c956c]  p-6 flex flex-col lg:flex-row gap-3 justify-between items-start mt-[20%] md:mt-[7%] lg:mt-[6%]">
       {/* Right Section */}
        <div className="w-full lg:w-[65%] bg-white/70 backdrop-blur-md rounded-3xl shadow-xl shadow-sky-900/5 border border-white/80 overflow-hidden">
               <div className="pt-12">
@@ -299,7 +299,7 @@ export default function Home() {
             className="w-full flex justify-center items-center gap-x-3 bg-[#fa518f] hover:bg-[#fa518f]/75 bg-[length:200%_auto] hover:bg-right transition-all duration-500 px-6 py-4 text-white rounded-xl shadow-lg shadow-[#4c956c]/20 font-bold tracking-wide active:scale-95"
             onClick={() => downloadPDF()}
           >
-            <span>تحميل بطاقة PDF</span>
+            <span>تنزيل بطاقة PDF</span>
             <FaDownload className="text-sm animate-bounce" />
           </button>
         </div>
