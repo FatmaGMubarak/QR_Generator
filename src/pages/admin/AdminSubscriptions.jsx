@@ -7,6 +7,7 @@ import AnalyzingImageDemo from '../../components/common/AnalyzingImageDemo';
 import {CalendarCheck, ClipboardClock, MonitorCheck, OctagonMinus, PartyPopper} from "lucide-react";
 import DeleteModal from '../../components/common/DeleteModal';
 import DiactivateModal from '../../components/common/ui/DiactivateModal';
+import { fetchSettings } from '../../store/reducers/settingsSlice';
 
 export default function AdminSubscriptions() {
     const [filter, setFilter] = useState('all');
@@ -16,6 +17,7 @@ export default function AdminSubscriptions() {
 
   const subscriptions = useSelector((state)=>state?.subscription?.subscriptions);
   const loading = useSelector((state)=>state?.subscription?.loading);
+  const settings = useSelector((state)=>state?.settings?.settings);
 
   const dispatch = useDispatch();
 
@@ -23,6 +25,7 @@ export default function AdminSubscriptions() {
 
   useEffect(()=>{
     dispatch(fetchSubscriptions());
+    dispatch(fetchSettings());
   }, [dispatch])
   const navigateToSub = (id) =>{
     navigate(`/subscription/${id}`);
@@ -109,11 +112,9 @@ const handleWhatsAppReminder = (sub) => {
 
     const cleanPhone = phone.replace(/\D/g, "");
 
-    const message =
-        `مرحباً ${sub?.user?.name || ''} \n\n` +
-        `نود تذكيرك بأن اشتراكك سينتهي بتاريخ ${sub?.end_date}.\n` +
-        `يرجى تجديد الاشتراك للاستمرار في الاستفادة من خدماتنا.\n\n` +
-        `شكراً لك`;
+    const message = settings?.whats_message
+  ?.replace("مرحباً", `مرحباً ${sub?.user_name || ''}`)
+  ?.replace("بتاريخ", `بتاريخ ${sub?.end_date || ""}` );
 
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
